@@ -142,7 +142,9 @@ if selected_main_menu == "Market":
                     st.plotly_chart(fig3, use_container_width=True)
 
         except FileNotFoundError:
-        st.error("파일을 찾을 수 없습니다. 경로를 확인하세요.")
+            st.error("파일을 찾을 수 없습니다. 경로를 확인하세요.")
+        except Exception as e:
+            st.error(f"파일을 열 수 없습니다: {e}")
 
     elif selected_sub_menu == "Descriptive":
         st.title("Descriptive")
