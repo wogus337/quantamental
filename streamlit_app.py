@@ -36,7 +36,7 @@ selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 if selected_main_menu == "Market":
     if selected_sub_menu == "Chart":
 
-        st.title(Chart")
+        st.title("Chart")
         file_path = "data/streamlit_24.xlsx"
         selected_sheet = "P1_Raw"  # 원하는 시트 이름을 지정합니다.
 
