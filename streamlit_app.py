@@ -37,6 +37,7 @@ selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 
 if selected_main_menu == "Market":
     if selected_sub_menu == "Chart":
+
         st.title("MAGI")
         file_path = "data/streamlit_24.xlsx"
         selected_sheet = "P1_Raw"  # 원하는 시트 이름을 지정합니다.
@@ -58,10 +59,8 @@ if selected_main_menu == "Market":
             with col2:
                 selected_column2 = st.selectbox("Series2", ['선택 없음'] + columns)
 
-
             def convert_df_to_csv(df):
                 return df.to_csv(index=False).encode('utf-8')
-
 
             # 선택된 열의 데이터만 추출
             if selected_column1 != '선택 없음' and selected_column2 != '선택 없음' and selected_column1 != selected_column2:
@@ -141,6 +140,9 @@ if selected_main_menu == "Market":
 
                     st.plotly_chart(fig2, use_container_width=True)
                     st.plotly_chart(fig3, use_container_width=True)
+
+        except FileNotFoundError:
+        st.error("파일을 찾을 수 없습니다. 경로를 확인하세요.")
 
     elif selected_sub_menu == "Descriptive":
         st.title("Descriptive")
