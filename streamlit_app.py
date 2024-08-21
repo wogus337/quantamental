@@ -6,13 +6,11 @@ import openpyxl
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
-# 1차 메뉴 옵션
-main_menu_options = ["Market", "국면판단", "유사국면", "모델전망 & Signal", "시나리오"]
+st.sidebar.title("QIS")
 
-# 1차 메뉴 선택
+main_menu_options = ["Market", "국면판단", "유사국면", "모델전망 & Signal", "시나리오"]
 selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
-# 2차 메뉴 옵션과 해당되는 서브 메뉴 정의
 if selected_main_menu == "Market":
     st.sidebar.markdown("### Market Options")
     sub_menu_options = ["Chart", "Descriptive"]
@@ -38,7 +36,7 @@ selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 if selected_main_menu == "Market":
     if selected_sub_menu == "Chart":
 
-        st.title("MAGI")
+        st.title(Chart")
         file_path = "data/streamlit_24.xlsx"
         selected_sheet = "P1_Raw"  # 원하는 시트 이름을 지정합니다.
 
