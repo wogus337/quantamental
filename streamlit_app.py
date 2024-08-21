@@ -11,7 +11,7 @@ from plotly.subplots import make_subplots
 st.title("MAGI")
 
 # 엑셀 파일 경로 지정
-file_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
+file_path = "data/streamlit_24.xlsx"
 
 # 특정 시트 지정 (예: 'Sheet1')
 selected_sheet = "P1_Raw"  # 원하는 시트 이름을 지정합니다.
