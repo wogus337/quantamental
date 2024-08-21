@@ -5,6 +5,7 @@ import pandas as pd
 import openpyxl
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+import datetime
 
 st.set_page_config(layout="wide")
 
@@ -66,17 +67,24 @@ if selected_main_menu == "Market":
 
             if selected_column1 != '선택 없음':
                 with col1:
-                    st.header("Date")
-                    start_date = st.date_input("Start", df['DATE'].min())
+                    sdate = df['DATE'].min().strftime('%Y/%m/%d')
+                    edate = df['DATE'].max().strftime('%Y/%m/%d')
+                    st.header(f"Date: {sdate} ~ {edate}")
+                    start_date = st.date_input("Start", min_value=df['DATE'].min(), max_value=df['DATE'].max(), value=df['DATE'].min())
+                    st.write("")
                 with col2:
                     st.header("")
-                    end_date = st.date_input("End", df['DATE'].max())
+                    end_date = st.date_input("End", min_value=df['DATE'].min(), max_value=df['DATE'].max(), value=df['DATE'].max())
+                    st.write("")
                 fdf = df[(df['DATE'] >= pd.to_datetime(start_date)) & (df['DATE'] <= pd.to_datetime(end_date))]
+                st.subheader(f"{selected_column1}")
+                recent_data1 = fdf[['DATE', selected_column1]].tail(5)
+                recent_data1.set_index('DATE', inplace=True)
+                st.dataframe(recent_data1, use_container_width=True)
 
                 fig1 = go.Figure()
                 fig1.add_trace(go.Scatter(x=fdf['DATE'], y=fdf[selected_column1], name=selected_column1, mode='lines'))
                 fig1.update_layout(
-                    title=f"{selected_column1}",
                     xaxis_title='Date',
                     yaxis_title=selected_column1,
                     template='plotly_dark'
@@ -87,6 +95,17 @@ if selected_main_menu == "Market":
                 if selected_column2 != '선택 없음' and selected_column1 != selected_column2:
 
                     with col1:
+                        st.write("")
+                        st.write("")
+                        st.write("")
+                        st.write("")
+                        st.write("")
+                        st.write("")
+                        st.subheader(f"{selected_column1} & {selected_column2}")
+                        recent_data2 = fdf[['DATE', selected_column1, selected_column2]].tail(5)
+                        recent_data2.set_index('DATE', inplace=True)
+                        st.dataframe(recent_data2, use_container_width=True)
+
                         fig2 = go.Figure()
                         fig2.add_trace(
                             go.Scatter(x=fdf['DATE'], y=fdf[selected_column1], name=selected_column1, mode='lines'))
@@ -94,7 +113,6 @@ if selected_main_menu == "Market":
                                                   yaxis='y2'))
 
                         fig2.update_layout(
-                            title=f"{selected_column1} & {selected_column2}",
                             xaxis_title='Date',
                             yaxis_title=selected_column1,
                             yaxis2=dict(
@@ -114,14 +132,27 @@ if selected_main_menu == "Market":
                         st.plotly_chart(fig2, use_container_width=True)
 
                     with col2:
-                        fdf['difference'] = fdf[selected_column1] - fdf[selected_column2]
+                        selectr = st.radio("Relative:",
+                                           ["Spread", "Ratio"]
+                        )
+
+                        if selectr == "Spread":
+                            fdf['rel'] = fdf[selected_column1] - fdf[selected_column2]
+                            st.subheader(f"Spr({selected_column1}-{selected_column2})")
+                        elif selectr == "Ratio":
+                            fdf['rel'] = fdf[selected_column1]/fdf[selected_column2]
+                            st.subheader(f"Ratio({selected_column1}/{selected_column2})")
+
+                        recent_data3 = fdf[['DATE', 'rel']].tail(5)
+                        recent_data3.set_index('DATE', inplace=True)
+                        st.dataframe(recent_data3, use_container_width=True)
+
                         fig3 = go.Figure()
-                        fig3.add_trace(go.Scatter(x=fdf['DATE'], y=fdf['difference'], name='Diff(1-2)', mode='lines',
+                        fig3.add_trace(go.Scatter(x=fdf['DATE'], y=fdf['rel'], name='relative', mode='lines',
                                                   line=dict(color='orange')))
                         fig3.update_layout(
-                            title=f"Spr({selected_column1}-{selected_column2})",
                             xaxis_title='Date',
-                            yaxis_title='Diff(1-2)',
+                            yaxis_title='relative',
                             template='plotly_dark'
                         )
                         st.plotly_chart(fig3, use_container_width=True)
@@ -130,7 +161,7 @@ if selected_main_menu == "Market":
 
             # 선택된 열의 데이터만 추출
             if selected_column1 != '선택 없음' and selected_column2 != '선택 없음' and selected_column1 != selected_column2:
-                data_to_download = df[['DATE', selected_column1, selected_column2]]
+                data_to_download = fdf[['DATE', selected_column1, selected_column2, 'rel']]
                 csv_data = convert_df_to_csv(data_to_download)
                 st.download_button(
                     label="Data Download(CSV)",
@@ -140,7 +171,7 @@ if selected_main_menu == "Market":
                 )
             elif ((selected_column1 != '선택 없음' and selected_column2 == '선택 없음') or
                   (selected_column1 != '선택 없음' and selected_column1 == selected_column2)):
-                data_to_download = df[['DATE', selected_column1]]
+                data_to_download = fdf[['DATE', selected_column1]]
                 csv_data = convert_df_to_csv(data_to_download)
                 st.download_button(
                     label="Data Download(CSV)",
