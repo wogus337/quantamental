@@ -6,6 +6,8 @@ import openpyxl
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
+st.set_page_config(layout="wide")
+
 st.sidebar.title("QIS")
 
 main_menu_options = ["Market", "국면판단", "유사국면", "모델전망 & Signal", "시나리오"]
@@ -37,7 +39,8 @@ if selected_main_menu == "Market":
     if selected_sub_menu == "Chart":
 
         st.title("Chart")
-        file_path = "data/streamlit_24.xlsx"
+        #file_path = "data/streamlit_24.xlsx"
+        file_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
         selected_sheet = "P1_Raw"  # 원하는 시트 이름을 지정합니다.
 
         try:
@@ -99,45 +102,46 @@ if selected_main_menu == "Market":
                 st.plotly_chart(fig1, use_container_width=True)
 
                 if selected_column2 != '선택 없음' and selected_column1 != selected_column2:
-                    fig2 = go.Figure()
-                    fig2.add_trace(
-                        go.Scatter(x=df['DATE'], y=df[selected_column1], name=selected_column1, mode='lines'))
-                    fig2.add_trace(go.Scatter(x=df['DATE'], y=df[selected_column2], name=selected_column2, mode='lines',
-                                              yaxis='y2'))
 
-                    df['difference'] = df[selected_column1] - df[selected_column2]
-                    fig3 = go.Figure()
-                    fig3.add_trace(go.Scatter(x=df['DATE'], y=df['difference'], name='Diff(1-2)', mode='lines',
-                                              line=dict(color='orange')))
+                    with col1:
+                        fig2 = go.Figure()
+                        fig2.add_trace(
+                            go.Scatter(x=df['DATE'], y=df[selected_column1], name=selected_column1, mode='lines'))
+                        fig2.add_trace(go.Scatter(x=df['DATE'], y=df[selected_column2], name=selected_column2, mode='lines',
+                                                  yaxis='y2'))
 
-                    fig2.update_layout(
-                        title=f"{selected_column1} & {selected_column2}",
-                        xaxis_title='Date',
-                        yaxis_title=selected_column1,
-                        yaxis2=dict(
-                            title=selected_column2,
-                            overlaying='y',
-                            side='right'
-                        ),
-                        template='plotly_dark',
-                        legend=dict(
-                            orientation='h',
-                            yanchor='top',
-                            y=1.1,
-                            xanchor='center',  # 범례의 x축 앵커를 가운데로
-                            x=0.5
+                        fig2.update_layout(
+                            title=f"{selected_column1} & {selected_column2}",
+                            xaxis_title='Date',
+                            yaxis_title=selected_column1,
+                            yaxis2=dict(
+                                title=selected_column2,
+                                overlaying='y',
+                                side='right'
+                            ),
+                            template='plotly_dark',
+                            legend=dict(
+                                orientation='h',
+                                yanchor='top',
+                                y=1.1,
+                                xanchor='center',  # 범례의 x축 앵커를 가운데로
+                                x=0.5
+                            )
                         )
-                    )
+                        st.plotly_chart(fig2, use_container_width=True)
 
-                    fig3.update_layout(
-                        title=f"Spr({selected_column1}-{selected_column2})",
-                        xaxis_title='Date',
-                        yaxis_title='Diff(1-2)',
-                        template='plotly_dark'
-                    )
-
-                    st.plotly_chart(fig2, use_container_width=True)
-                    st.plotly_chart(fig3, use_container_width=True)
+                    with col2:
+                        df['difference'] = df[selected_column1] - df[selected_column2]
+                        fig3 = go.Figure()
+                        fig3.add_trace(go.Scatter(x=df['DATE'], y=df['difference'], name='Diff(1-2)', mode='lines',
+                                                  line=dict(color='orange')))
+                        fig3.update_layout(
+                            title=f"Spr({selected_column1}-{selected_column2})",
+                            xaxis_title='Date',
+                            yaxis_title='Diff(1-2)',
+                            template='plotly_dark'
+                        )
+                        st.plotly_chart(fig3, use_container_width=True)
 
         except FileNotFoundError:
             st.error("파일을 찾을 수 없습니다. 경로를 확인하세요.")
