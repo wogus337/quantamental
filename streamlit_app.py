@@ -8,8 +8,12 @@ from plotly.subplots import make_subplots
 
 st.set_page_config(layout="wide")
 
-st.sidebar.title("QIS")
+#image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
+image_path = "images/miraeasset.png"
 
+st.sidebar.image(image_path, use_column_width=True, output_format='PNG')
+st.sidebar.write("")
+st.sidebar.title("QIS")
 main_menu_options = ["Market", "국면판단", "유사국면", "모델전망 & Signal", "시나리오"]
 selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
@@ -60,6 +64,67 @@ if selected_main_menu == "Market":
             with col2:
                 selected_column2 = st.selectbox("Series2", ['선택 없음'] + columns)
 
+            if selected_column1 != '선택 없음':
+                with col1:
+                    st.header("Date")
+                    start_date = st.date_input("Start", df['DATE'].min())
+                with col2:
+                    st.header("")
+                    end_date = st.date_input("End", df['DATE'].max())
+                fdf = df[(df['DATE'] >= pd.to_datetime(start_date)) & (df['DATE'] <= pd.to_datetime(end_date))]
+
+                fig1 = go.Figure()
+                fig1.add_trace(go.Scatter(x=fdf['DATE'], y=fdf[selected_column1], name=selected_column1, mode='lines'))
+                fig1.update_layout(
+                    title=f"{selected_column1}",
+                    xaxis_title='Date',
+                    yaxis_title=selected_column1,
+                    template='plotly_dark'
+                )
+
+                st.plotly_chart(fig1, use_container_width=True)
+
+                if selected_column2 != '선택 없음' and selected_column1 != selected_column2:
+
+                    with col1:
+                        fig2 = go.Figure()
+                        fig2.add_trace(
+                            go.Scatter(x=fdf['DATE'], y=fdf[selected_column1], name=selected_column1, mode='lines'))
+                        fig2.add_trace(go.Scatter(x=fdf['DATE'], y=fdf[selected_column2], name=selected_column2, mode='lines',
+                                                  yaxis='y2'))
+
+                        fig2.update_layout(
+                            title=f"{selected_column1} & {selected_column2}",
+                            xaxis_title='Date',
+                            yaxis_title=selected_column1,
+                            yaxis2=dict(
+                                title=selected_column2,
+                                overlaying='y',
+                                side='right'
+                            ),
+                            template='plotly_dark',
+                            legend=dict(
+                                orientation='h',
+                                yanchor='top',
+                                y=1.1,
+                                xanchor='center',  # 범례의 x축 앵커를 가운데로
+                                x=0.5
+                            )
+                        )
+                        st.plotly_chart(fig2, use_container_width=True)
+
+                    with col2:
+                        fdf['difference'] = fdf[selected_column1] - fdf[selected_column2]
+                        fig3 = go.Figure()
+                        fig3.add_trace(go.Scatter(x=fdf['DATE'], y=fdf['difference'], name='Diff(1-2)', mode='lines',
+                                                  line=dict(color='orange')))
+                        fig3.update_layout(
+                            title=f"Spr({selected_column1}-{selected_column2})",
+                            xaxis_title='Date',
+                            yaxis_title='Diff(1-2)',
+                            template='plotly_dark'
+                        )
+                        st.plotly_chart(fig3, use_container_width=True)
             def convert_df_to_csv(df):
                 return df.to_csv(index=False).encode('utf-8')
 
@@ -85,64 +150,6 @@ if selected_main_menu == "Market":
                 )
             else:
                 pass
-
-            if selected_column1 != '선택 없음':
-                # 첫 번째 플롯: 선택된 열의 시계열 차트
-                fig1 = go.Figure()
-
-                fig1.add_trace(go.Scatter(x=df['DATE'], y=df[selected_column1], name=selected_column1, mode='lines'))
-
-                fig1.update_layout(
-                    title=f"{selected_column1}",
-                    xaxis_title='Date',
-                    yaxis_title=selected_column1,
-                    template='plotly_dark'
-                )
-
-                st.plotly_chart(fig1, use_container_width=True)
-
-                if selected_column2 != '선택 없음' and selected_column1 != selected_column2:
-
-                    with col1:
-                        fig2 = go.Figure()
-                        fig2.add_trace(
-                            go.Scatter(x=df['DATE'], y=df[selected_column1], name=selected_column1, mode='lines'))
-                        fig2.add_trace(go.Scatter(x=df['DATE'], y=df[selected_column2], name=selected_column2, mode='lines',
-                                                  yaxis='y2'))
-
-                        fig2.update_layout(
-                            title=f"{selected_column1} & {selected_column2}",
-                            xaxis_title='Date',
-                            yaxis_title=selected_column1,
-                            yaxis2=dict(
-                                title=selected_column2,
-                                overlaying='y',
-                                side='right'
-                            ),
-                            template='plotly_dark',
-                            legend=dict(
-                                orientation='h',
-                                yanchor='top',
-                                y=1.1,
-                                xanchor='center',  # 범례의 x축 앵커를 가운데로
-                                x=0.5
-                            )
-                        )
-                        st.plotly_chart(fig2, use_container_width=True)
-
-                    with col2:
-                        df['difference'] = df[selected_column1] - df[selected_column2]
-                        fig3 = go.Figure()
-                        fig3.add_trace(go.Scatter(x=df['DATE'], y=df['difference'], name='Diff(1-2)', mode='lines',
-                                                  line=dict(color='orange')))
-                        fig3.update_layout(
-                            title=f"Spr({selected_column1}-{selected_column2})",
-                            xaxis_title='Date',
-                            yaxis_title='Diff(1-2)',
-                            template='plotly_dark'
-                        )
-                        st.plotly_chart(fig3, use_container_width=True)
-
         except FileNotFoundError:
             st.error("파일을 찾을 수 없습니다. 경로를 확인하세요.")
         except Exception as e:
