@@ -39,8 +39,8 @@ if selected_main_menu == "Market":
     if selected_sub_menu == "Chart":
 
         st.title("Chart")
-        #file_path = "data/streamlit_24.xlsx"
-        file_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
+        file_path = "data/streamlit_24.xlsx"
+        #file_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
         selected_sheet = "P1_Raw"  # 원하는 시트 이름을 지정합니다.
 
         try:
