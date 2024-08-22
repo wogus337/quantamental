@@ -214,13 +214,13 @@ elif selected_main_menu == "유사국면":
         df_simdt['SDATE_SIM'] = pd.to_datetime(df_simdt['SDATE_SIM'])
         df_simdt['EDATE_SIM'] = pd.to_datetime(df_simdt['EDATE_SIM'])
 
-        sel_edt = st.selectbox("유사국면정보의 행을 선택하세요:", df_simdt['EDATE'].unique())
+        sel_edt = st.selectbox("분석기준일을 선택하면 해당기준일에 산출한 유사국면 리스트가 생성됩니다.:", df_simdt['EDATE'].unique())
 
         sel_df = df_simdt[df_simdt['EDATE'] == sel_edt]
         st.table(sel_df)
 
         fil_dt = df_simdt[df_simdt['EDATE'] == sel_edt]['EDATE_SIM']
-        sel_simdt = st.selectbox("해당 EDATE에 대한 EDATE_SIM을 선택하세요:", fil_dt)
+        sel_simdt = st.selectbox("산출된 유사국면을 선택하면 정보가 표시됩니다.:", fil_dt)
 
         col1, col2, col3, col4 = st.columns(4)
         with col1:
