@@ -2,6 +2,7 @@
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 import openpyxl
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
@@ -200,8 +201,149 @@ elif selected_main_menu == "국면판단":
 
 elif selected_main_menu == "유사국면":
     if selected_sub_menu == "유사국면분석":
-        st.title("유사국면분석")
-        st.write("유사국면분석")
+
+        simfile_path = "data/streamlit_24_sim.xlsx"
+        #simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
+
+        df_raw = pd.read_excel(simfile_path, sheet_name='RawdataSim')
+        df_simdt = pd.read_excel(simfile_path, sheet_name='siminfo')
+
+        df_raw['DATE'] = pd.to_datetime(df_raw['DATE'])
+        df_simdt['SDATE'] = pd.to_datetime(df_simdt['SDATE'])
+        df_simdt['EDATE'] = pd.to_datetime(df_simdt['EDATE'])
+        df_simdt['SDATE_SIM'] = pd.to_datetime(df_simdt['SDATE_SIM'])
+        df_simdt['EDATE_SIM'] = pd.to_datetime(df_simdt['EDATE_SIM'])
+
+        sel_edt = st.selectbox("유사국면정보의 행을 선택하세요:", df_simdt['EDATE'].unique())
+
+        sel_df = df_simdt[df_simdt['EDATE'] == sel_edt]
+        st.table(sel_df)
+
+        fil_dt = df_simdt[df_simdt['EDATE'] == sel_edt]['EDATE_SIM']
+        sel_simdt = st.selectbox("해당 EDATE에 대한 EDATE_SIM을 선택하세요:", fil_dt)
+
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            selectafter = st.radio("After:", ["20D", "40D", "60D"])
+
+        if selectafter == "20D":
+            numafter = 20
+        elif selectafter == "40D":
+            numafter = 40
+        else:
+            numafter = 60
+
+        sdate = pd.to_datetime(df_simdt[(df_simdt['EDATE'] == sel_edt) & (df_simdt['EDATE_SIM'] == sel_simdt)]['SDATE'].values[0])
+        edate = pd.to_datetime(df_simdt[(df_simdt['EDATE'] == sel_edt) & (df_simdt['EDATE_SIM'] == sel_simdt)]['EDATE'].values[0])
+        sdate_sim = pd.to_datetime(df_simdt[(df_simdt['EDATE'] == sel_edt) & (df_simdt['EDATE_SIM'] == sel_simdt)]['SDATE_SIM'].values[0])
+        edate_sim = pd.to_datetime(df_simdt[(df_simdt['EDATE'] == sel_edt) & (df_simdt['EDATE_SIM'] == sel_simdt)]['EDATE_SIM'].values[0])
+
+        lenk = df_simdt[(df_simdt['EDATE'] == sel_edt) & (df_simdt['EDATE_SIM'] == sel_simdt)]['LEN_K'].values[0]
+        lens = df_simdt[(df_simdt['EDATE'] == sel_edt) & (df_simdt['EDATE_SIM'] == sel_simdt)]['LEN_S'].values[0]
+        numaftsim = np.round((lens / lenk) * numafter).astype(int)
+        #lenf = max(lenk, lens)
+
+        edtsim_index = df_raw[df_raw['DATE'] == pd.to_datetime(edate_sim)].index[0]
+        looka = df_raw.loc[edtsim_index + numaftsim, 'DATE']
+        df2 = df_raw[(df_raw['DATE'] >= sdate_sim) & (df_raw['DATE'] <= looka)]
+
+        edate_index = df_raw[df_raw['DATE'] == pd.to_datetime(edate)].index[0]
+        target_index = edate_index + numafter
+        if target_index >= len(df_raw):
+            extra_rows = target_index - len(df_raw) + 1
+            last_date = df_raw['DATE'].iloc[-1]
+            new_rows = pd.DataFrame({
+                'DATE': [last_date + pd.Timedelta(days=i + 1) for i in range(extra_rows)]
+            })
+            for col in df_raw.columns:
+                if col != 'DATE':
+                    new_rows[col] = np.nan
+            df_rawx = pd.concat([df_raw, new_rows], ignore_index=True)
+            lookb = df_rawx.loc[target_index, 'DATE']
+            df1 = df_rawx[(df_rawx['DATE'] >= sdate) & (df_rawx['DATE'] <= lookb)]
+        else:
+            lookb = df_raw.loc[target_index, 'DATE']
+            df1 = df_raw[(df_raw['DATE'] >= sdate) & (df_raw['DATE'] <= lookb)]
+
+        def genfig(colnm, dfa=df1, dfb=df2):
+
+            dfa = dfa[[colnm]]
+            dfb = dfb[[colnm]]
+            if len(dfa) == len(dfb):
+                dfa['dindex'] = range(1, len(dfa) + 1)
+                dfb['dindex'] = range(1, len(dfb) + 1)
+                dfb = dfb.rename(columns={colnm: f"{colnm}_sim"})
+                dfc = pd.merge(dfa, dfb, on='dindex', how='left')
+            elif len(dfa) > len(dfb):
+                dfa['dindex'] = range(1, len(dfa) + 1)
+                dfb['dindex'] = np.round(np.linspace(1, len(dfa)+1, num=len(dfb))).astype(int)
+                dfb = dfb.rename(columns={colnm: f"{colnm}_sim"})
+                dfc = pd.merge(dfa, dfb, on='dindex', how='left')
+            else:
+                dfa['dindex'] = range(1, len(dfa) + 1)
+                indices = np.round(np.linspace(1, len(dfb)+1, num=len(dfa))).astype(int)
+                indices = np.clip(indices, 0, len(dfb) - 1)
+                dfb = dfb.iloc[indices].reset_index(drop=True)  # 인덱스 리셋
+                dfb['dindex'] = range(1, len(dfb) + 1)
+                dfb = dfb.rename(columns={colnm: f"{colnm}_sim"})
+                dfc = pd.merge(dfa, dfb, on='dindex', how='left')
+
+            dfc_a = dfc.iloc[0:120]
+            dfc_b = dfc.iloc[120:]
+            dfc_a[colnm] = dfc_a[colnm].interpolate()
+            dfc_a[f"{colnm}_sim"] = dfc_a[f"{colnm}_sim"].interpolate()
+            dfc = pd.concat([dfc_a, dfc_b])
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=dfc['dindex'], y=dfc[colnm], mode='lines',
+                                     name=f'{colnm} ({sdate.date()} ~ {edate.date()})'))
+            fig.add_trace(go.Scatter(x=dfc['dindex'], y=dfc[f'{colnm}_sim'], mode='lines',
+                                     name=f'{colnm}_sim ({sdate_sim.date()} ~ {edate_sim.date()})', yaxis='y2'))
+
+            specificx = 120
+            fig.add_vline(x=specificx, line_width=1, line_dash="dash", line_color="red")
+
+            fig.update_layout(
+                title=f'Similarity: {colnm}',
+                xaxis=dict(title='Date'),
+                yaxis=dict(title='기준시점'),
+                yaxis2=dict(title='유사국면', overlaying='y', side='right'),
+                template='plotly_dark',
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',  # 범례의 x축 앵커를 가운데로
+                    x=0.5
+                )
+            )
+
+            return fig
+
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            fig_US10Y = genfig('US10Y')
+            fig_DXY = genfig('DXY')
+            st.plotly_chart(fig_US10Y)
+            st.plotly_chart(fig_DXY)
+        with col2:
+            fig_US2Y = genfig('US2Y')
+            fig_SPX = genfig('SPX')
+            st.plotly_chart(fig_US2Y)
+            st.plotly_chart(fig_SPX)
+        with col3:
+            fig_USIG = genfig('USIG')
+            fig_MSCIEM = genfig('MSCIEM')
+            st.plotly_chart(fig_USIG)
+            st.plotly_chart(fig_MSCIEM)
+        with col4:
+            fig_EMSOV = genfig('EMSOV')
+            fig_OIL = genfig('OIL')
+            st.plotly_chart(fig_EMSOV)
+            st.plotly_chart(fig_OIL)
+
     elif selected_sub_menu == "유사국면2":
         st.title("유사국면2")
         st.write("유사국면2")
