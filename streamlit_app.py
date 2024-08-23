@@ -10,8 +10,17 @@ import datetime
 
 st.set_page_config(layout="wide")
 
-#image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
+series_path = "data/streamlit_24.xlsx"
+cylfile_path = "data/streamlit_24_cycle.xlsx"
+simfile_path = "data/streamlit_24_sim.xlsx"
+fx_path = "data/streamlit_24_fx.xlsx"
 image_path = "images/miraeasset.png"
+
+# series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
+# cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
+# simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
+# fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
+# image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
 
 st.sidebar.image(image_path, use_column_width=True, output_format='PNG')
 st.sidebar.write("")
@@ -40,12 +49,9 @@ if selected_main_menu == "Market":
     if selected_sub_menu == "Relative":
 
         st.title("Relative")
-        file_path = "data/streamlit_24.xlsx"
-        #file_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
-        selected_sheet = "P1_Raw"  # 원하는 시트 이름을 지정합니다.
 
         try:
-            df = pd.read_excel(file_path, sheet_name=selected_sheet)
+            df = pd.read_excel(series_path, sheet_name=P1_Raw)
 
             if 'DATE' in df.columns:
                 df['DATE'] = pd.to_datetime(df['DATE'])
@@ -188,12 +194,8 @@ if selected_main_menu == "Market":
 
 elif selected_main_menu == "국면":
     if selected_sub_menu == "Economic Cycle":
+        st.title("Economic Cycle")
 
-        cylfile_path = "data/streamlit_24_cycle.xlsx"
-        #cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
-
-        series_path = "data/streamlit_24.xlsx"
-        #series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
         tseries = pd.read_excel(series_path, sheet_name='P1_Raw')
         if 'DATE' in tseries.columns:
             tseries['DATE'] = pd.to_datetime(tseries['DATE'])
@@ -252,38 +254,136 @@ elif selected_main_menu == "국면":
             xaxis=dict(title='DATE'),
             yaxis=dict(
                 title='Economic Cycle Indicator',
-                side='left'
+                side='left',
+                title_standoff=20
             ),
             yaxis2=dict(
                 title=selected_column1,
                 overlaying='y',
                 side='left',
                 anchor='x',
-                position=0.1
+                position=0.15,
+                title_standoff=60
             ),
             yaxis3=dict(
                 title='Phases',
                 overlaying='y',  # 좌측 y축과 겹치도록 설정
                 side='right',
                 anchor='x',
-                position=0.9
+                position=0.85
             ),
             barmode='overlay',
             bargap=0,
-            template='plotly_dark'
+            template='plotly_dark',
+            legend=dict(
+                orientation='h',
+                yanchor='top',
+                y=1.1,
+                xanchor='center',  # 범례의 x축 앵커를 가운데로
+                x=0.5
+            ),
+            autosize=True
         )
 
         st.plotly_chart(fig)
 
     elif selected_sub_menu == "Credit Cycle":
         st.title("Credit Cycle")
-        st.write("Credit Cycle")
+
+        tseries = pd.read_excel(series_path, sheet_name='P1_Raw')
+        if 'DATE' in tseries.columns:
+            tseries['DATE'] = pd.to_datetime(tseries['DATE'])
+        else:
+            st.error("시트에 'DATE' 열이 없습니다.")
+            st.stop()
+        columns = [col for col in tseries.columns if col != 'DATE']
+
+        df_cyclee = pd.read_excel(cylfile_path, sheet_name='CycleC')
+        df_cycleemeta = pd.read_excel(cylfile_path, sheet_name='CycleC_Meta')
+        phase_nm = ['Expansion', 'Downturn', 'Repair', 'Recovery']
+
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            start_date = st.date_input('Start', df_cyclee['DATE'].min())
+        with col2:
+            end_date = st.date_input('End', df_cyclee['DATE'].max())
+        with col3:
+            selected_column1 = st.selectbox("비교", columns)
+
+        # 입력받은 날짜 구간으로 데이터 필터링
+        fdf = df_cyclee[(df_cyclee['DATE'] >= pd.to_datetime(start_date)) &
+                        (df_cyclee['DATE'] <= pd.to_datetime(end_date))]
+
+        s_df = tseries[['DATE', selected_column1]]
+        s_df['Month'] = s_df['DATE'].dt.to_period('M')
+        df_last = s_df.groupby('Month').apply(lambda x: x.loc[x['DATE'].idxmax()]).reset_index(drop=True)
+        df_last['DATE'] = df_last['DATE'].apply(lambda x: x.replace(day=1))
+        df_last = df_last[['DATE', selected_column1]]
+        fdf = pd.merge(fdf, df_last, on='DATE', how='left')
+
+        fig = go.Figure()
+        for phase in phase_nm:
+            fig.add_trace(go.Bar(
+                x=fdf['DATE'], y=fdf[phase],
+                name=f'{phase}',
+                yaxis='y3',
+                opacity=0.4,
+                marker=dict(line=dict(width=0))
+            ))
+        fig.add_trace(go.Scatter(
+            x=fdf['DATE'], y=fdf['Credit_Cycle_Indicator'],
+            mode='lines', name='Credit_Cycle_Indicator',
+            yaxis='y1',
+            line=dict(width=4, color='red')
+        ))
+        fig.add_trace(go.Scatter(
+            x=fdf['DATE'], y=fdf[selected_column1],
+            mode='lines', name=selected_column1,
+            yaxis='y2',
+            line=dict(width=4, color='blue')
+        ))
+
+        fig.update_layout(
+            title='Credit Cycle Indicator and Phases',
+            xaxis=dict(title='DATE'),
+            yaxis=dict(
+                title='Credit Cycle Indicator',
+                side='left',
+                title_standoff=20
+            ),
+            yaxis2=dict(
+                title=selected_column1,
+                overlaying='y',
+                side='left',
+                anchor='x',
+                position=0.15,
+                title_standoff=60
+            ),
+            yaxis3=dict(
+                title='Phases',
+                overlaying='y',  # 좌측 y축과 겹치도록 설정
+                side='right',
+                anchor='x',
+                position=0.85
+            ),
+            barmode='overlay',
+            bargap=0,
+            template='plotly_dark',
+            legend=dict(
+                orientation='h',
+                yanchor='top',
+                y=1.1,
+                xanchor='center',  # 범례의 x축 앵커를 가운데로
+                x=0.5
+            ),
+            autosize=True
+        )
+
+        st.plotly_chart(fig)
 
 elif selected_main_menu == "유사국면":
     if selected_sub_menu == "유사국면분석1":
-
-        simfile_path = "data/streamlit_24_sim.xlsx"
-        #simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
+        st.title("금리(US10, US2), 스프레드(USIG, EMIG), 주가지수(SPX, MSCIEM), DXY, Gold, Oil 기준 유사국면")
 
         df_raw = pd.read_excel(simfile_path, sheet_name='RawdataSim')
         df_simdt = pd.read_excel(simfile_path, sheet_name='siminfo')
@@ -294,13 +394,18 @@ elif selected_main_menu == "유사국면":
         df_simdt['SDATE_SIM'] = pd.to_datetime(df_simdt['SDATE_SIM'])
         df_simdt['EDATE_SIM'] = pd.to_datetime(df_simdt['EDATE_SIM'])
 
-        sel_edt = st.selectbox("분석기준일을 선택하면 해당기준일에 산출한 유사국면 리스트가 생성됩니다.:", df_simdt['EDATE'].unique())
+        dates_rev = df_simdt['EDATE'].unique()[::-1]
+        sel_edt = st.selectbox(
+            "분석기준일을 선택하면 해당기준일에 산출한 유사국면 리스트가 생성됩니다.",
+            dates_rev,
+            index=0
+        )
 
         sel_df = df_simdt[df_simdt['EDATE'] == sel_edt]
         st.table(sel_df)
 
         fil_dt = df_simdt[df_simdt['EDATE'] == sel_edt]['EDATE_SIM']
-        sel_simdt = st.selectbox("산출된 유사국면을 선택하면 정보가 표시됩니다.:", fil_dt)
+        sel_simdt = st.selectbox("산출된 유사국면을 선택(EDATE_SIM 기준)하면 정보가 표시됩니다.", fil_dt)
 
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -400,14 +505,14 @@ elif selected_main_menu == "유사국면":
 
             return fig
 
-
         col1, col2, col3, col4 = st.columns(4)
-
         with col1:
             fig_US10Y = genfig('US10Y')
             fig_DXY = genfig('DXY')
+            fig_GOLD = genfig('GOLD')
             st.plotly_chart(fig_US10Y)
             st.plotly_chart(fig_DXY)
+            st.plotly_chart(fig_GOLD)
         with col2:
             fig_US2Y = genfig('US2Y')
             fig_SPX = genfig('SPX')
@@ -431,19 +536,185 @@ elif selected_main_menu == "유사국면":
 elif selected_main_menu == "모델전망 & Signal":
     if selected_sub_menu == "예측종합":
         st.title("예측종합")
-        st.write("예측종합")
+
     elif selected_sub_menu == "금리예측":
         st.title("금리예측")
-        st.write("금리예측")
+
     elif selected_sub_menu == "USIG 스프레드 예측":
         st.title("USIG 스프레드 예측")
-        st.write("USIG 스프레드 예측")
+
     elif selected_sub_menu == "장단기 스프레드 예측":
         st.title("장단기 스프레드 예측")
-        st.write("장단기 스프레드 예측")
+
     elif selected_sub_menu == "FX":
-        st.title("FX")
-        st.write("FX")
+
+        st.title("FX Strategy by Transformer")
+
+        def fxgenfig1(xrange, fxnm, selprob, chart_title, df_path=fx_path):
+            df = pd.read_excel(df_path, sheet_name='fx', usecols=xrange, skiprows=0)
+            colnm = ['DATE', 'Prob0', 'Prob1', fxnm, 'fx_v', 'Conviction', 'FX_Long', 'Strategy']
+            df.columns = colnm
+            df = df[df['DATE'].notna()]
+            fdf = df[df['DATE'] >= pd.Timestamp('2021-01-04')]
+
+            fdf.set_index('DATE', inplace=True)
+            all_dates = pd.date_range(start=fdf.index.min(), end=fdf.index.max(), freq='D')
+            fdf = fdf.reindex(all_dates).ffill()
+
+            fig1 = go.Figure()
+            fig1.add_trace(go.Bar(
+                x=fdf.index, y=fdf[selprob],
+                yaxis='y2',
+                opacity=0.4,
+                showlegend=False,
+                marker=dict(line=dict(width=0))
+            ))
+            fig1.add_trace(go.Bar(
+                x=fdf.index, y=fdf['Conviction'],
+                name='Conviction',
+                yaxis='y2',
+                opacity=0.4,
+                marker=dict(line=dict(width=0))
+            ))
+            fig1.add_trace(go.Scatter(
+                x=fdf.index, y=fdf[fxnm],
+                mode='lines', name=f'{fxnm}',
+                yaxis='y1',
+                line=dict(width=4, color='red')
+            ))
+
+            fig1.update_layout(
+                title=chart_title,
+                xaxis=dict(title='DATE'),
+                yaxis=dict(
+                    title=fxnm,
+                    side='left'
+                ),
+                yaxis2=dict(
+                    title='Conviction',
+                    overlaying='y',
+                    side='right'
+                ),
+                barmode='overlay',
+                bargap=0,
+                template='plotly_dark',
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',  # 범례의 x축 앵커를 가운데로
+                    x=0.5
+                )
+            )
+
+            fig2 = go.Figure()
+            fig2.add_trace(go.Scatter(
+                x=fdf.index, y=fdf['FX_Long'],
+                mode='lines', name=f'{fxnm}',
+                yaxis='y1',
+                line=dict(width=4, color='red')
+            ))
+            fig2.add_trace(go.Scatter(
+                x=fdf.index, y=fdf['Strategy'],
+                mode='lines', name='Strategy',
+                yaxis='y1',
+                line=dict(width=4, color='blue')
+            ))
+            fig2.update_layout(
+                xaxis_title='DATE',
+                yaxis_title='Return',
+                template='plotly_dark',
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',  # 범례의 x축 앵커를 가운데로
+                    x=0.5
+                )
+            )
+            return fig1, fig2
+
+        def fxgenfig2(xrange, fxnm, chart_title, df_path=fx_path):
+            df = pd.read_excel(df_path, sheet_name='fx', usecols=xrange, skiprows=0)
+            colnm = ['DATE', 'Prob0', 'Prob1', fxnm, 'fx_v', 'Conviction']
+            df.columns = colnm
+            df = df[df['DATE'].notna()]
+            fdf = df[df['DATE'] >= pd.Timestamp('2021-01-04')]
+
+            fdf.set_index('DATE', inplace=True)
+            all_dates = pd.date_range(start=fdf.index.min(), end=fdf.index.max(), freq='D')
+            fdf = fdf.reindex(all_dates).ffill()
+
+            fig1 = go.Figure()
+            fig1.add_trace(go.Bar(
+                x=fdf.index, y=fdf['Prob1'],
+                yaxis='y2',
+                opacity=0.4,
+                showlegend=False,
+                marker=dict(line=dict(width=0))
+            ))
+            fig1.add_trace(go.Bar(
+                x=fdf.index, y=fdf['Conviction'],
+                name='Conviction',
+                yaxis='y2',
+                opacity=0.4,
+                marker=dict(line=dict(width=0))
+            ))
+            fig1.add_trace(go.Scatter(
+                x=fdf.index, y=fdf[fxnm],
+                mode='lines', name=f'{fxnm}',
+                yaxis='y1',
+                line=dict(width=4, color='red')
+            ))
+
+            fig1.update_layout(
+                title=chart_title,
+                xaxis=dict(title='DATE'),
+                yaxis=dict(
+                    title=fxnm,
+                    side='left'
+                ),
+                yaxis2=dict(
+                    title='Conviction',
+                    overlaying='y',
+                    side='right'
+                ),
+                barmode='overlay',
+                bargap=0,
+                template='plotly_dark',
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',  # 범례의 x축 앵커를 가운데로
+                    x=0.5
+                )
+            )
+            return fig1
+
+        fig_USDKRW1, fig_USDKRW2 = fxgenfig1('B:I', 'USDKRW', 'Prob1', 'USDKRW: USD 강세 모델')
+        fig_KRWUSD1, fig_KRWUSD2 = fxgenfig1('O:V', 'USDKRW', 'Prob0', 'USDKRW: KRW 강세 모델')
+        fig_USDEUR1 = fxgenfig2('AJ:AO', 'USDEUR', 'USDEUR')
+        fig_USDGBP1 = fxgenfig2('AQ:AV', 'USDGBP', 'EURUSD')
+        fig_USDCNY1 = fxgenfig2('AX:BC', 'USDCNY', 'USDCNY')
+        fig_USDJPY1 = fxgenfig2('BE:BJ', 'USDJPY', 'USDJPY')
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(fig_USDKRW1)
+            st.plotly_chart(fig_KRWUSD1)
+            st.write("")
+            st.write("")
+            st.plotly_chart(fig_USDEUR1)
+            st.plotly_chart(fig_USDCNY1)
+        with col2:
+            st.plotly_chart(fig_USDKRW2)
+            st.plotly_chart(fig_KRWUSD2)
+            st.write("")
+            st.write("")
+            st.plotly_chart(fig_USDGBP1)
+            st.plotly_chart(fig_USDJPY1)
+
 
 elif selected_main_menu == "시나리오":
     if selected_sub_menu == "금리":
