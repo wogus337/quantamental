@@ -16,35 +16,30 @@ image_path = "images/miraeasset.png"
 st.sidebar.image(image_path, use_column_width=True, output_format='PNG')
 st.sidebar.write("")
 st.sidebar.title("QIS")
-main_menu_options = ["Market", "국면판단", "유사국면", "모델전망 & Signal", "시나리오"]
+main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "시나리오"]
 selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
 if selected_main_menu == "Market":
-    st.sidebar.markdown("### Market Options")
-    sub_menu_options = ["Chart", "Descriptive"]
+    sub_menu_options = ["ChartBoard", "Relative"]
 
-elif selected_main_menu == "국면판단":
-    st.sidebar.markdown("### 국면판단 Options")
-    sub_menu_options = ["Economic Cycle", "Credit Cycle"]
+elif selected_main_menu == "국면":
+    sub_menu_options = ["Economic Cycle", "Credit Cycle", "HMM"]
 
 elif selected_main_menu == "유사국면":
-    st.sidebar.markdown("### 유사국면 Options")
-    sub_menu_options = ["유사국면분석", "유사국면2"]
+    sub_menu_options = ["유사국면분석1", "유사국면분석2_위원회"]
 
 elif selected_main_menu == "모델전망 & Signal":
-    st.sidebar.markdown("### 모델전망 & Signal Options")
     sub_menu_options = ["예측종합", "금리예측", "USIG 스프레드 예측", "장단기 스프레드 예측", "FX"]
 
 elif selected_main_menu == "시나리오":
-    st.sidebar.markdown("### 시나리오 Options")
     sub_menu_options = ["금리", "스프레드"]
 
 selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 
 if selected_main_menu == "Market":
-    if selected_sub_menu == "Chart":
+    if selected_sub_menu == "Relative":
 
-        st.title("Chart")
+        st.title("Relative")
         file_path = "data/streamlit_24.xlsx"
         #file_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
         selected_sheet = "P1_Raw"  # 원하는 시트 이름을 지정합니다.
@@ -191,16 +186,101 @@ if selected_main_menu == "Market":
         st.title("Descriptive")
         st.write("Descriptive")
 
-elif selected_main_menu == "국면판단":
+elif selected_main_menu == "국면":
     if selected_sub_menu == "Economic Cycle":
-        st.title("Economic Cycle")
-        st.write("Economic Cycle")
+
+        cylfile_path = "data/streamlit_24_cycle.xlsx"
+        #cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
+
+        series_path = "data/streamlit_24.xlsx"
+        #series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
+        tseries = pd.read_excel(series_path, sheet_name='P1_Raw')
+        if 'DATE' in tseries.columns:
+            tseries['DATE'] = pd.to_datetime(tseries['DATE'])
+        else:
+            st.error("시트에 'DATE' 열이 없습니다.")
+            st.stop()
+        columns = [col for col in tseries.columns if col != 'DATE']
+
+        df_cyclee = pd.read_excel(cylfile_path, sheet_name='CycleE')
+        df_cycleemeta = pd.read_excel(cylfile_path, sheet_name='CycleE_Meta')
+        phase_nm = ['Expansion', 'Downturn', 'Repair', 'Recovery']
+
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            start_date = st.date_input('Start', df_cyclee['DATE'].min())
+        with col2:
+            end_date = st.date_input('End', df_cyclee['DATE'].max())
+        with col3:
+            selected_column1 = st.selectbox("비교", columns)
+
+        # 입력받은 날짜 구간으로 데이터 필터링
+        fdf = df_cyclee[(df_cyclee['DATE'] >= pd.to_datetime(start_date)) &
+                        (df_cyclee['DATE'] <= pd.to_datetime(end_date))]
+
+        s_df = tseries[['DATE', selected_column1]]
+        s_df['Month'] = s_df['DATE'].dt.to_period('M')
+        df_last = s_df.groupby('Month').apply(lambda x: x.loc[x['DATE'].idxmax()]).reset_index(drop=True)
+        df_last['DATE'] = df_last['DATE'].apply(lambda x: x.replace(day=1))
+        df_last = df_last[['DATE', selected_column1]]
+        fdf = pd.merge(fdf, df_last, on='DATE', how='left')
+
+        fig = go.Figure()
+        for phase in phase_nm:
+            fig.add_trace(go.Bar(
+                x=fdf['DATE'], y=fdf[phase],
+                name=f'{phase}',
+                yaxis='y3',
+                opacity=0.4,
+                marker=dict(line=dict(width=0))
+            ))
+        fig.add_trace(go.Scatter(
+            x=fdf['DATE'], y=fdf['Economic_Cycle_Indicator'],
+            mode='lines', name='Economic_Cycle_Indicator',
+            yaxis='y1',
+            line=dict(width=4, color='red')
+        ))
+        fig.add_trace(go.Scatter(
+            x=fdf['DATE'], y=fdf[selected_column1],
+            mode='lines', name=selected_column1,
+            yaxis='y2',
+            line=dict(width=4, color='blue')
+        ))
+
+        fig.update_layout(
+            title='Economic Cycle Indicator and Phases',
+            xaxis=dict(title='DATE'),
+            yaxis=dict(
+                title='Economic Cycle Indicator',
+                side='left'
+            ),
+            yaxis2=dict(
+                title=selected_column1,
+                overlaying='y',
+                side='left',
+                anchor='x',
+                position=0.1
+            ),
+            yaxis3=dict(
+                title='Phases',
+                overlaying='y',  # 좌측 y축과 겹치도록 설정
+                side='right',
+                anchor='x',
+                position=0.9
+            ),
+            barmode='overlay',
+            bargap=0,
+            template='plotly_dark'
+        )
+
+        st.plotly_chart(fig)
+
     elif selected_sub_menu == "Credit Cycle":
         st.title("Credit Cycle")
         st.write("Credit Cycle")
 
 elif selected_main_menu == "유사국면":
-    if selected_sub_menu == "유사국면분석":
+    if selected_sub_menu == "유사국면분석1":
 
         simfile_path = "data/streamlit_24_sim.xlsx"
         #simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
@@ -288,10 +368,10 @@ elif selected_main_menu == "유사국면":
                 dfb = dfb.rename(columns={colnm: f"{colnm}_sim"})
                 dfc = pd.merge(dfa, dfb, on='dindex', how='left')
 
+            dfc[f"{colnm}_sim"] = dfc[f"{colnm}_sim"].interpolate()
             dfc_a = dfc.iloc[0:120]
             dfc_b = dfc.iloc[120:]
             dfc_a[colnm] = dfc_a[colnm].interpolate()
-            dfc_a[f"{colnm}_sim"] = dfc_a[f"{colnm}_sim"].interpolate()
             dfc = pd.concat([dfc_a, dfc_b])
 
             fig = go.Figure()
