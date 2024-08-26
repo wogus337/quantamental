@@ -51,7 +51,7 @@ if selected_main_menu == "Market":
         st.title("Relative")
 
         try:
-            df = pd.read_excel(series_path, sheet_name=P1_Raw)
+            df = pd.read_excel(series_path, sheet_name='P1_Raw')
 
             if 'DATE' in df.columns:
                 df['DATE'] = pd.to_datetime(df['DATE'])
