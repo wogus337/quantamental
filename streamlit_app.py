@@ -35,15 +35,113 @@ elif selected_main_menu == "국면":
     sub_menu_options = ["Economic Cycle", "Credit Cycle", "HMM"]
 
 elif selected_main_menu == "유사국면":
-    sub_menu_options = ["유사국면분석1", "유사국면분석2_위원회"]
-
-elif selected_main_menu == "모델전망 & Signal":
-    sub_menu_options = ["예측종합", "금리예측", "USIG 스프레드 예측", "장단기 스프레드 예측", "FX"]
+    sub_menu_options = ["유사국면분석"]
 
 elif selected_main_menu == "시나리오":
     sub_menu_options = ["금리", "스프레드"]
 
+elif selected_main_menu == "모델전망 & Signal":
+    sub_menu_options = ["예측종합", "금리예측", "USIG 스프레드 예측", "장단기 스프레드 예측", "FX"]
+
 selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
+
+if selected_main_menu == "Market":
+    if selected_sub_menu == "ChartBoard":
+
+        st.title("Chart Borad")
+
+        df = pd.read_excel(series_path, sheet_name='P1_Raw')
+        selecpr = st.radio("", ["1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y"], horizontal=True)
+        edate = df['DATE'].max()
+        if selecpr == "1M":
+            sdate = edate - pd.DateOffset(months=1)
+        elif selecpr == "3M":
+            sdate = edate - pd.DateOffset(months=3)
+        elif selecpr == "6M":
+            sdate = edate - pd.DateOffset(months=6)
+        elif selecpr == "1Y":
+            sdate = edate - pd.DateOffset(years=1)
+        elif selecpr == "3Y":
+            sdate = edate - pd.DateOffset(years=3)
+        elif selecpr == "5Y":
+            sdate = edate - pd.DateOffset(years=5)
+        else:
+            sdate = edate - pd.DateOffset(years=10)
+
+        def chartgen(vname, rawdf=df):
+            xdf = rawdf[['DATE', vname]]
+            fdf = xdf[(xdf['DATE'] >= pd.to_datetime(sdate)) & (xdf['DATE'] <= pd.to_datetime(edate))]
+            fdf = fdf.dropna()
+            fig1 = go.Figure()
+            fig1.add_trace(go.Scatter(x=fdf['DATE'], y=fdf[vname], name=vname, mode='lines'))
+            fig1.update_layout(
+                xaxis_title='Date',
+                yaxis_title=vname,
+                template='plotly_dark'
+            )
+            return fig1
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            fig_US10Y = chartgen('USGG10YR')
+            st.subheader("USGG10YR")
+            st.plotly_chart(fig_US10Y)
+
+            fig_USIGOAS = chartgen('USIG_OAS')
+            st.subheader("USIG_OAS")
+            st.plotly_chart(fig_USIGOAS)
+
+            fig_MSCIA = chartgen('MSCI_ACWI')
+            st.subheader("MSCI_ACWI")
+            st.plotly_chart(fig_MSCIA)
+
+            fig_OIL = chartgen('OIL')
+            st.subheader("WTI")
+            st.plotly_chart(fig_OIL)
+
+        with col2:
+            fig_US2Y = chartgen('USGG2YR')
+            st.subheader("USGG2YR")
+            st.plotly_chart(fig_US2Y)
+
+            fig_USHYOAS = chartgen('USHY_OAS')
+            st.subheader("USHY_OAS")
+            st.plotly_chart(fig_USHYOAS)
+
+            fig_MSCIE = chartgen('MSCI_EM')
+            st.subheader("MSCI_EM")
+            st.plotly_chart(fig_MSCIE)
+
+            fig_DXY = chartgen('DXY')
+            st.subheader("Dollar Index")
+            st.plotly_chart(fig_DXY)
+
+        with col3:
+            fig_US5Y = chartgen('USGG5YR')
+            st.subheader("USGG5YR")
+            st.plotly_chart(fig_US5Y)
+
+            fig_SP500 = chartgen('SP500')
+            st.subheader("S&P500")
+            st.plotly_chart(fig_SP500)
+
+            fig_KOSPI = chartgen('KOSPI')
+            st.subheader("KOSPI")
+            st.plotly_chart(fig_KOSPI)
+
+        with col4:
+            fig_US30Y = chartgen('USGG30YR')
+            st.subheader("USGG30YR")
+            st.plotly_chart(fig_US30Y)
+
+            fig_NASDAQ = chartgen('NASDAQ')
+            st.subheader("NASDAQ")
+            st.plotly_chart(fig_NASDAQ)
+
+            fig_GOLD = chartgen('GOLD')
+            st.subheader("GOLD")
+            st.plotly_chart(fig_GOLD)
 
 if selected_main_menu == "Market":
     if selected_sub_menu == "Relative":
@@ -382,7 +480,7 @@ elif selected_main_menu == "국면":
         st.plotly_chart(fig)
 
 elif selected_main_menu == "유사국면":
-    if selected_sub_menu == "유사국면분석1":
+    if selected_sub_menu == "유사국면분석":
         st.title("금리(US10, US2), 스프레드(USIG, EMIG), 주가지수(SPX, MSCIEM), DXY, Gold, Oil 기준 유사국면")
 
         df_raw = pd.read_excel(simfile_path, sheet_name='RawdataSim')
@@ -409,7 +507,7 @@ elif selected_main_menu == "유사국면":
 
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            selectafter = st.radio("After:", ["20D", "40D", "60D"])
+            selectafter = st.radio("After:", ["20D", "40D", "60D"], horizontal=True)
 
         if selectafter == "20D":
             numafter = 20
