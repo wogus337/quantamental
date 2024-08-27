@@ -14,34 +14,40 @@ series_path = "data/streamlit_24.xlsx"
 cylfile_path = "data/streamlit_24_cycle.xlsx"
 simfile_path = "data/streamlit_24_sim.xlsx"
 fx_path = "data/streamlit_24_fx.xlsx"
+model_path = "data/streamlit_24_signal.xlsx"
 image_path = "images/miraeasset.png"
 
 # series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
 # cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
 # simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
 # fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
+# model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
 # image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
 
 st.sidebar.image(image_path, use_column_width=True, output_format='PNG')
 st.sidebar.write("")
 st.sidebar.title("QIS")
-main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "시나리오"]
+#main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "Allocation", "시나리오"]
+main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal"]
 selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
 if selected_main_menu == "Market":
     sub_menu_options = ["ChartBoard", "Relative"]
 
 elif selected_main_menu == "국면":
-    sub_menu_options = ["Economic Cycle", "Credit Cycle", "HMM"]
+    sub_menu_options = ["Economic Cycle", "Credit Cycle"]
 
 elif selected_main_menu == "유사국면":
     sub_menu_options = ["유사국면분석"]
 
-elif selected_main_menu == "시나리오":
-    sub_menu_options = ["금리", "스프레드"]
+#elif selected_main_menu == "시나리오":
+#    sub_menu_options = ["금리", "스프레드"]
 
 elif selected_main_menu == "모델전망 & Signal":
-    sub_menu_options = ["예측종합", "금리예측", "USIG 스프레드 예측", "장단기 스프레드 예측", "FX"]
+    sub_menu_options = ["금리", "USIG스프레드", "FX"]
+
+#elif selected_main_menu == "Allocation":
+#    sub_menu_options = ["Region", "US_Sector", "USIG_Sector"]
 
 selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 
@@ -632,20 +638,226 @@ elif selected_main_menu == "유사국면":
         st.write("유사국면2")
 
 elif selected_main_menu == "모델전망 & Signal":
-    if selected_sub_menu == "예측종합":
-        st.title("예측종합")
+    if selected_sub_menu == "금리":
 
-    elif selected_sub_menu == "금리예측":
-        st.title("금리예측")
+        dfw = pd.read_excel(model_path, sheet_name='Week')
+        dfm = pd.read_excel(model_path, sheet_name='Month')
 
-    elif selected_sub_menu == "USIG 스프레드 예측":
-        st.title("USIG 스프레드 예측")
+        st.title("Model Forecast - Duration")
+        st.write("")
 
-    elif selected_sub_menu == "장단기 스프레드 예측":
-        st.title("장단기 스프레드 예측")
+        html = """
+                <style>
+                    .custom-text {
+                        line-height: 1.2; /* 행간을 줄이는 CSS 속성 */
+                    }
+                </style>
+                <div class="custom-text">
+                    <p>1. 좌축: 주황색 영역이 +/- 이면, 금리 하락/상승 시그널이며, 없으면 중립시그널</p>
+                    <p>2. 우축: 금요일 기준 시그널 발생 이후 1주간(월~월)의 실제 금리 등락폭</p>
+                    <p>3. 주황색 영역과 남색 막대의 부호가 같으면 방향이 적중했음을 의미</p>
+                    <p>4. 우측 테이블의 가장 하단값은 이번 주의 시그널(Actual값 없음)</p>
+                </div>
+                """
+        st.markdown(html, unsafe_allow_html=True)
+
+        st.write("")
+        st.subheader("Duration Mdoel1(선행변수모델) - Weekly")
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            chart_sig = dfw.tail(52)
+            fig1 = make_subplots(specs=[[{"secondary_y": True}]])
+
+            fig1.add_trace(
+                go.Bar(x=chart_sig['DATE'], y=chart_sig['Dur_Leading'], name='Dur_Leading',
+                       marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
+                secondary_y=False,
+            )
+            fig1.add_trace(
+                go.Bar(x=chart_sig['DATE'], y=chart_sig['Chg_Dur'], name='Chg_Dur',
+                       marker=dict(color='rgb(13, 45, 79)', opacity=1, line=dict(width=0))),
+                secondary_y=True,
+            )
+            fig1.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
+            fig1.update_yaxes(range=[-0.5, 0.5], secondary_y=True)
+            fig1.update_layout(
+                title_text="Duration Mdoel1(선행변수모델) - Weekly",
+                xaxis_title="Date",
+                yaxis_title="Dur_Leading",
+                yaxis2_title="Chg_Dur",
+                template='plotly_dark',
+                barmode='overlay',
+                bargap=0,
+                bargroupgap=0,
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',
+                    x=0.5
+                )
+            )
+            st.plotly_chart(fig1, use_container_width=True)
+        with col2:
+            recent_sig = dfw[['DATE', 'Dur_Leading', 'Act_Direc_Dur', 'Chg_Dur']].tail(10)
+            html = recent_sig.to_html(index=False, border=0)
+            last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
+            html = last_row_style + html
+            st.markdown(html, unsafe_allow_html=True)
+
+        st.subheader("Duration Mdoel2(Boruta) - Weekly")
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            chart_sig = dfw.tail(52)
+            fig2 = make_subplots(specs=[[{"secondary_y": True}]])
+
+            fig2.add_trace(
+                go.Bar(x=chart_sig['DATE'], y=chart_sig['Dur_Boruta'], name='Dur_Boruta',
+                       marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
+                secondary_y=False,
+            )
+            fig2.add_trace(
+                go.Bar(x=chart_sig['DATE'], y=chart_sig['Chg_Dur'], name='Chg_Dur',
+                       marker=dict(color='rgb(13, 45, 79)', opacity=1, line=dict(width=0))),
+                secondary_y=True,
+            )
+            fig2.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
+            fig2.update_yaxes(range=[-0.5, 0.5], secondary_y=True)
+            fig2.update_layout(
+                title_text="Duration Model2(Boruta) - Weekly",
+                xaxis_title="Date",
+                yaxis_title="Dur_Boruta",
+                yaxis2_title="Chg_Dur",
+                template='plotly_dark',
+                barmode='overlay',
+                bargap=0,
+                bargroupgap=0,
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',
+                    x=0.5
+                )
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+        with col2:
+            recent_sig = dfw[['DATE', 'Dur_Boruta', 'Act_Direc_Dur', 'Chg_Dur']].tail(10)
+            html = recent_sig.to_html(index=False, border=0)
+            last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
+            html = last_row_style + html
+            st.markdown(html, unsafe_allow_html=True)
+
+    elif selected_sub_menu == "USIG스프레드":
+        dfw = pd.read_excel(model_path, sheet_name='Week')
+        dfm = pd.read_excel(model_path, sheet_name='Month')
+
+        st.title("Model Forecast - Credit")
+        st.write("")
+
+        html = """
+                <style>
+                    .custom-text {
+                        line-height: 1.2; /* 행간을 줄이는 CSS 속성 */
+                    }
+                </style>
+                <div class="custom-text">
+                    <p>1. 좌축: 주황색 영역이 +/- 이면, 스프레드 축소/확대 시그널이며, 없으면 중립시그널</p>
+                    <p>2. 우축: 금요일 기준 시그널 발생 이후 1주간(월~월)의 실제 스프레드 등락폭</p>
+                    <p>3. 주황색 영역과 남색 막대의 부호가 같으면 방향이 적중했음을 의미</p>
+                    <p>4. 우측 테이블의 가장 하단값은 이번 주의 시그널(Actual값 없음)</p>
+                </div>
+                """
+        st.markdown(html, unsafe_allow_html=True)
+
+        st.write("")
+        st.subheader("Credit Mdoel1 - Weekly")
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            chart_sig = dfw.tail(52)
+            fig1 = make_subplots(specs=[[{"secondary_y": True}]])
+
+            fig1.add_trace(
+                go.Bar(x=chart_sig['DATE'], y=chart_sig['Credit_1M'], name='Credit_1M',
+                       marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
+                secondary_y=False,
+            )
+            fig1.add_trace(
+                go.Bar(x=chart_sig['DATE'], y=chart_sig['Chg_Credit'], name='Chg_Credit',
+                       marker=dict(color='rgb(13, 45, 79)', opacity=1, line=dict(width=0))),
+                secondary_y=True,
+            )
+            fig1.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
+            fig1.update_yaxes(range=[-0.2, 0.2], secondary_y=True)
+            fig1.update_layout(
+                title_text="Credit Model1 - Weekly",
+                xaxis_title="Date",
+                yaxis_title="Credit_1M",
+                yaxis2_title="Chg_Credit",
+                template='plotly_dark',
+                barmode='overlay',
+                bargap=0,
+                bargroupgap=0,
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',
+                    x=0.5
+                )
+            )
+            st.plotly_chart(fig1, use_container_width=True)
+        with col2:
+            recent_sig = dfw[['DATE', 'Credit_1M', 'Act_Direc_Credit', 'Chg_Credit']].tail(10)
+            html = recent_sig.to_html(index=False, border=0)
+            last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
+            html = last_row_style + html
+            st.markdown(html, unsafe_allow_html=True)
+
+        st.subheader("Credit Mdoel2 - Weekly")
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            chart_sig = dfw.tail(52)
+            fig2 = make_subplots(specs=[[{"secondary_y": True}]])
+
+            fig2.add_trace(
+                go.Bar(x=chart_sig['DATE'], y=chart_sig['Credit_3M'], name='Credit_3M',
+                       marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
+                secondary_y=False,
+            )
+            fig2.add_trace(
+                go.Bar(x=chart_sig['DATE'], y=chart_sig['Chg_Credit'], name='Chg_Credit',
+                       marker=dict(color='rgb(13, 45, 79)', opacity=1, line=dict(width=0))),
+                secondary_y=True,
+            )
+            fig2.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
+            fig2.update_yaxes(range=[-0.2, 0.2], secondary_y=True)
+            fig2.update_layout(
+                title_text="Credit Model2 - Weekly",
+                xaxis_title="Date",
+                yaxis_title="Credit_3M",
+                yaxis2_title="Chg_Credit",
+                template='plotly_dark',
+                barmode='overlay',
+                bargap=0,
+                bargroupgap=0,
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',
+                    x=0.5
+                )
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+        with col2:
+            recent_sig = dfw[['DATE', 'Credit_1M', 'Act_Direc_Credit', 'Chg_Credit']].tail(10)
+            html = recent_sig.to_html(index=False, border=0)
+            last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
+            html = last_row_style + html
+            st.markdown(html, unsafe_allow_html=True)
 
     elif selected_sub_menu == "FX":
-
         st.title("FX Strategy by Transformer")
 
         def fxgenfig1(xrange, fxnm, selprob, chart_title, df_path=fx_path):
