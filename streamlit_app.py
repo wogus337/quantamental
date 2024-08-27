@@ -662,8 +662,8 @@ elif selected_main_menu == "모델전망 & Signal":
         st.markdown(html, unsafe_allow_html=True)
 
         st.write("")
-        st.subheader("Duration Mdoel1(선행변수모델) - Weekly")
-        col1, col2 = st.columns([3, 1])
+        st.subheader("Duration Model1(선행변수모델) - Weekly")
+        col1, col2 = st.columns([2, 1])
         with col1:
             chart_sig = dfw.tail(52)
             fig1 = make_subplots(specs=[[{"secondary_y": True}]])
@@ -681,7 +681,7 @@ elif selected_main_menu == "모델전망 & Signal":
             fig1.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
             fig1.update_yaxes(range=[-0.5, 0.5], secondary_y=True)
             fig1.update_layout(
-                title_text="Duration Mdoel1(선행변수모델) - Weekly",
+                title_text="Duration Model1(선행변수모델) - Weekly",
                 xaxis_title="Date",
                 yaxis_title="Dur_Leading",
                 yaxis2_title="Chg_Dur",
@@ -706,7 +706,7 @@ elif selected_main_menu == "모델전망 & Signal":
             st.markdown(html, unsafe_allow_html=True)
 
         st.subheader("Duration Mdoel2(Boruta) - Weekly")
-        col1, col2 = st.columns([3, 1])
+        col1, col2 = st.columns([2, 1])
         with col1:
             chart_sig = dfw.tail(52)
             fig2 = make_subplots(specs=[[{"secondary_y": True}]])
@@ -772,7 +772,7 @@ elif selected_main_menu == "모델전망 & Signal":
 
         st.write("")
         st.subheader("Credit Mdoel1 - Weekly")
-        col1, col2 = st.columns([3, 1])
+        col1, col2 = st.columns([2, 1])
         with col1:
             chart_sig = dfw.tail(52)
             fig1 = make_subplots(specs=[[{"secondary_y": True}]])
@@ -815,7 +815,7 @@ elif selected_main_menu == "모델전망 & Signal":
             st.markdown(html, unsafe_allow_html=True)
 
         st.subheader("Credit Mdoel2 - Weekly")
-        col1, col2 = st.columns([3, 1])
+        col1, col2 = st.columns([2, 1])
         with col1:
             chart_sig = dfw.tail(52)
             fig2 = make_subplots(specs=[[{"secondary_y": True}]])
