@@ -771,7 +771,7 @@ elif selected_main_menu == "모델전망 & Signal":
         st.markdown(html, unsafe_allow_html=True)
 
         st.write("")
-        st.subheader("Credit Mdoel1 - Weekly")
+        st.subheader("Credit Model1 - Weekly")
         col1, col2 = st.columns([2, 1])
         with col1:
             chart_sig = dfw.tail(52)
@@ -814,7 +814,7 @@ elif selected_main_menu == "모델전망 & Signal":
             html = last_row_style + html
             st.markdown(html, unsafe_allow_html=True)
 
-        st.subheader("Credit Mdoel2 - Weekly")
+        st.subheader("Credit Model2 - Weekly")
         col1, col2 = st.columns([2, 1])
         with col1:
             chart_sig = dfw.tail(52)
