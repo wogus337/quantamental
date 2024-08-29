@@ -186,6 +186,10 @@ if authentication_status:
                 st.subheader("KOSPI")
                 st.plotly_chart(fig_KOSPI)
 
+                fig_USDKRW = chartgen('USDKRW')
+                st.subheader("USDKRW")
+                st.plotly_chart(fig_USDKRW)
+
             with col4:
                 fig_US30Y = chartgen('USGG30YR')
                 st.subheader("USGG30YR")
