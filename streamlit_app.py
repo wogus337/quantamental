@@ -12,25 +12,25 @@ import yaml
 import statsmodels.api as sm
 from statsmodels.stats.stattools import durbin_watson
 
-# series_path = "data/streamlit_24.xlsx"
-# cylfile_path = "data/streamlit_24_cycle.xlsx"
-# simfile_path = "data/streamlit_24_sim.xlsx"
-# fx_path = "data/streamlit_24_fx.xlsx"
-# model_path = "data/streamlit_24_signal.xlsx"
-# macro_path = "data/streamlit_24_macro.xlsx"
-# usig_path = "data/streamlit_24_usigpick.xlsx"
-# image_path = "images/miraeasset.png"
-# igimage_path = "images/usig.png"
-
-series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
-cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
-simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
-fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
-model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
-macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
-usig_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_usigpick.xlsx"
-image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
-igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
+series_path = "data/streamlit_24.xlsx"
+cylfile_path = "data/streamlit_24_cycle.xlsx"
+simfile_path = "data/streamlit_24_sim.xlsx"
+fx_path = "data/streamlit_24_fx.xlsx"
+model_path = "data/streamlit_24_signal.xlsx"
+macro_path = "data/streamlit_24_macro.xlsx"
+usig_path = "data/streamlit_24_usigpick.xlsx"
+image_path = "images/miraeasset.png"
+igimage_path = "images/usig.png"
+#
+# series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
+# cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
+# simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
+# fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
+# model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
+# macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
+# usig_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_usigpick.xlsx"
+# image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
+# igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
 
 st.set_page_config(layout="wide")
 
