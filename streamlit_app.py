@@ -12,21 +12,25 @@ import yaml
 import statsmodels.api as sm
 from statsmodels.stats.stattools import durbin_watson
 
-series_path = "data/streamlit_24.xlsx"
-cylfile_path = "data/streamlit_24_cycle.xlsx"
-simfile_path = "data/streamlit_24_sim.xlsx"
-fx_path = "data/streamlit_24_fx.xlsx"
-model_path = "data/streamlit_24_signal.xlsx"
-macro_path = "data/streamlit_24_macro.xlsx"
-image_path = "images/miraeasset.png"
+# series_path = "data/streamlit_24.xlsx"
+# cylfile_path = "data/streamlit_24_cycle.xlsx"
+# simfile_path = "data/streamlit_24_sim.xlsx"
+# fx_path = "data/streamlit_24_fx.xlsx"
+# model_path = "data/streamlit_24_signal.xlsx"
+# macro_path = "data/streamlit_24_macro.xlsx"
+# usig_path = "data/streamlit_24_usigpick.xlsx"
+# image_path = "images/miraeasset.png"
+# igimage_path = "images/usig.png"
 
-# series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
-# cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
-# simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
-# fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
-# model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
-# macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
-# image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
+series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
+cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
+simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
+fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
+model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
+macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
+usig_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_usigpick.xlsx"
+image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
+igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
 
 st.set_page_config(layout="wide")
 
@@ -89,7 +93,7 @@ if authentication_status:
     #    sub_menu_options = ["금리", "스프레드"]
 
     elif selected_main_menu == "모델전망 & Signal":
-        sub_menu_options = ["금리", "USIG스프레드", "FX"]
+        sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "FX"]
 
     #elif selected_main_menu == "USIG 추천종목":
     #    sub_menu_options = ["FACTOR", "DNN"]
@@ -1102,9 +1106,67 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
+        elif selected_sub_menu == "USIG 추천종목":
+            st.title("USIG 종목 Picking")
+
+            df = pd.read_excel(usig_path, sheet_name='pick')
+
+            dates_rev = df['DATE'].unique()[::-1]
+            sel_dt = st.selectbox(
+                "종목산출 기준일을 선택해 주세요(예. 7월말 산출 종목은 8월 포트폴리오를 위한 종목).",
+                dates_rev,
+                index=0
+            )
+
+            model_rev = list(df['Model'].unique())[::-1]
+            sector_ = list(df['Sector'].unique())
+            tenor_ = list(df['Tenor'].unique())
+            rating_ = list(df['Rating'].unique())
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                sel_model = st.selectbox("산출모델 선택", ['All'] + model_rev)
+            with col2:
+                sel_sector = st.selectbox("섹터", ['All'] + sector_)
+            with col3:
+                sel_tenor = st.selectbox("만기", ['All'] + tenor_)
+            with col4:
+                sel_rating = st.selectbox("등급", ['All'] + rating_)
+
+            fdf1 = df[(df['DATE'] == pd.to_datetime(sel_dt))]
+
+            fdf2 = fdf1
+            if sel_model != 'All':
+                fdf2 = fdf2[fdf2['Model'] == sel_model]
+            if sel_sector != 'All':
+                fdf2 = fdf2[fdf2['Sector'] == sel_sector]
+            if sel_tenor != 'All':
+                fdf2 = fdf2[fdf2['Tenor'] == sel_tenor]
+            if sel_rating != 'All':
+                fdf2 = fdf2[fdf2['Rating'] == sel_rating]
+
+            selable_columns = [col for col in fdf2.columns if col != 'DATE']
+
+            sel_columns = st.multiselect(
+                "Column Select:",
+                selable_columns,
+                default=selable_columns
+            )
+            if sel_columns:
+                st.dataframe(fdf2[sel_columns], hide_index=True)
+                csvf = fdf2[sel_columns].to_csv(index=False)
+                st.download_button(
+                    label="Download CSV",
+                    data=csvf,
+                    file_name='usig_pick.csv',
+                    mime='text/csv'
+                )
+
+            st.image(igimage_path, use_column_width=True, output_format='PNG')
+
         elif selected_sub_menu == "FX":
             st.title("FX Strategy by Transformer")
-
 
             def fxgenfig1(xrange, fxnm, selprob, chart_title, df_path=fx_path):
                 df = pd.read_excel(df_path, sheet_name='fx', usecols=xrange, skiprows=0)
