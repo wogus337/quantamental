@@ -1,7 +1,11 @@
 
 
 import streamlit as st
+from st_aggrid import AgGrid, GridUpdateMode, JsCode
+from st_aggrid.grid_options_builder import GridOptionsBuilder
 import pandas as pd
+from functools import reduce
+from pandas.tseries.offsets import BDay, DateOffset
 import numpy as np
 import openpyxl
 import plotly.graph_objs as go
@@ -11,6 +15,8 @@ import streamlit_authenticator as stauth
 import yaml
 import statsmodels.api as sm
 from statsmodels.stats.stattools import durbin_watson
+from sklearn.linear_model import LinearRegression
+
 
 series_path = "data/streamlit_24.xlsx"
 cylfile_path = "data/streamlit_24_cycle.xlsx"
@@ -19,9 +25,11 @@ fx_path = "data/streamlit_24_fx.xlsx"
 model_path = "data/streamlit_24_signal.xlsx"
 macro_path = "data/streamlit_24_macro.xlsx"
 usig_path = "data/streamlit_24_usigpick.xlsx"
+market_path = "data/streamlit_24_marketVV.xlsx"
+allo_path = "data/streamlit_24_allocation.xlsx"
 image_path = "images/miraeasset.png"
 igimage_path = "images/usig.png"
-#
+
 # series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
 # cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
 # simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
@@ -29,8 +37,160 @@ igimage_path = "images/usig.png"
 # model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
 # macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
 # usig_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_usigpick.xlsx"
+# market_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_marketVV.xlsx"
+# allo_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_allocation.xlsx"
 # image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
 # igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
+
+
+def get_closest_business_day(date, df):
+    if date in df['DATE'].values:
+        return date
+    else:
+        # Find the next closest business day
+        previous_business_day = date - BDay(0)
+        return previous_business_day
+
+
+def calculate_change_with_offset(df, chgopt, months_offset=0, years_offset=0, days_offset=0):
+    changes = {}
+    for col in df.columns:
+        if col != 'DATE':
+            current_value = df[col].iloc[-1]
+            # Calculate target date
+            if months_offset:
+                target_date = df['DATE'].iloc[-1] - DateOffset(months=months_offset)
+            elif years_offset:
+                target_date = df['DATE'].iloc[-1] - DateOffset(years=years_offset)
+            elif days_offset:
+                target_date = df['DATE'].iloc[-1] - BDay(days_offset)
+
+            # Find the closest business day to the target date
+            closest_date = get_closest_business_day(target_date, df)
+            if closest_date in df['DATE'].values:
+                previous_value = df[df['DATE'] == closest_date][col].values[0]
+                if chgopt == 1:
+                    changes[col] = ((current_value - previous_value) / previous_value) * 100
+                elif chgopt == 2:
+                    changes[col] = (current_value - previous_value)
+            else:
+                changes[col] = np.nan  # 데이터가 없을 경우 NaN 처리
+    return pd.Series(changes)
+
+
+def cal_table(df, chgopt, spechk):
+    stable = pd.DataFrame(index=[
+        'Latest', '1W', '1M', '3M', '6M', '1Y', '2Y', '3Y', '5Y', '10Y', 'MTD', 'YTD'
+    ])
+    for column in df.columns:
+        if column != 'DATE':  # DATE 열을 제외한 나머지 열에 대해 계산
+            latest_value = df[column].iloc[-1]  # 최신 값
+
+            # 각 기간별 변동률 계산
+            stable.at['Latest', column] = latest_value
+            stable.at['1W', column] = float(
+                calculate_change_with_offset(df[['DATE', column]], chgopt, days_offset=5).iloc[0])
+            stable.at['1M', column] = float(
+                calculate_change_with_offset(df[['DATE', column]], chgopt, months_offset=1).iloc[0])
+            stable.at['3M', column] = float(
+                calculate_change_with_offset(df[['DATE', column]], chgopt, months_offset=3).iloc[0])
+            stable.at['6M', column] = float(
+                calculate_change_with_offset(df[['DATE', column]], chgopt, months_offset=6).iloc[0])
+            stable.at['1Y', column] = float(
+                calculate_change_with_offset(df[['DATE', column]], chgopt, years_offset=1).iloc[0])
+            stable.at['2Y', column] = float(
+                calculate_change_with_offset(df[['DATE', column]], chgopt, years_offset=2).iloc[0])
+            stable.at['3Y', column] = float(
+                calculate_change_with_offset(df[['DATE', column]], chgopt, years_offset=3).iloc[0])
+            stable.at['5Y', column] = float(
+                calculate_change_with_offset(df[['DATE', column]], chgopt, years_offset=5).iloc[0])
+            stable.at['10Y', column] = float(
+                calculate_change_with_offset(df[['DATE', column]], chgopt, years_offset=10).iloc[0])
+            stable.at['MTD', column] = float(calculate_change_with_offset(df[['DATE', column]], chgopt, days_offset=df['DATE'].iloc[-1].day - 1).iloc[0])
+            stable.at['YTD', column] = float(calculate_change_with_offset(df[['DATE', column]], chgopt, days_offset=df['DATE'].iloc[-1].timetuple().tm_yday - 1).iloc[0])
+
+    # 모든 숫자를 소수점 둘째 자리까지 반올림
+    stable = stable.round(2)
+    stable = stable.T
+    stable = stable.reset_index()
+    numcols = stable.columns[1:]
+    stable[numcols] = stable[numcols].apply(pd.to_numeric)
+    stable.rename(columns={"index": "X"}, inplace=True)
+
+    if spechk == 1:
+        cellstyle_jscode = JsCode("""
+        function(params) {
+            let style = {
+                'textAlign': params.colDef.field === 'X' ? 'left' : 'right'
+            };
+            if (params.node.rowIndex % 2 === 0) {
+                style['backgroundColor'] = 'gainsboro';
+            } else {
+                style['backgroundColor'] = 'white';
+            }
+            return style;
+        }
+        """)
+    elif spechk == 2:
+        cellstyle_jscode = JsCode("""
+        function(params) {
+            let style = {
+                'textAlign': params.colDef.field === 'X' ? 'left' : 'right'
+            };
+            
+            let rowIndex = params.node.rowIndex;
+            if (rowIndex >= 0 && rowIndex <= 4) {
+                style['backgroundColor'] = 'gainsboro';
+            } else if (rowIndex >= 5 && rowIndex <= 10) {
+                style['backgroundColor'] = 'white';
+            } else if (rowIndex >= 11 && rowIndex <= 16) {
+                style['backgroundColor'] = 'gainsboro';
+            } else if (rowIndex >= 17 && rowIndex <= 22) {
+                style['backgroundColor'] = 'white';
+            } else if (rowIndex >= 23 && rowIndex <= 28) {
+                style['backgroundColor'] = 'gainsboro';
+            } else if (rowIndex >= 29 && rowIndex <= 34) {
+                style['backgroundColor'] = 'white';
+            } else if (rowIndex >= 35 && rowIndex <= 40) {
+                style['backgroundColor'] = 'gainsboro';
+            }
+            return style;
+        }
+        """)
+
+    # 숫자 포맷 설정
+    formatter_jscode = JsCode("""
+    function(params) {
+        return Number(params.value).toFixed(2);
+    }
+    """)
+
+    # columnDefs 설정
+    grid_options = {
+        'columnDefs': [
+            {'field': 'X', 'width': 300, 'cellStyle': cellstyle_jscode},
+            {'field': 'Latest', 'width': 200, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': '1W', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': '1M', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': '3M', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': '6M', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': '1Y', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': '2Y', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': '3Y', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': '5Y', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': '10Y', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': 'MTD', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+            {'field': 'YTD', 'width': 150, 'cellStyle': cellstyle_jscode, 'valueFormatter': formatter_jscode},
+        ],
+        'defaultColDef': {
+            'resizable': True,
+        },
+        'domLayout': 'normal',
+        'suppressHorizontalScroll': False
+    }
+
+    return stable, grid_options
+
 
 st.set_page_config(layout="wide")
 
@@ -74,11 +234,14 @@ if authentication_status:
     st.sidebar.write("")
     st.sidebar.title("QIS")
     # main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "Allocation", "시나리오"]
-    main_menu_options = ["Market", "국면", "유사국면", "Macro 분석", "모델전망 & Signal"]
+    main_menu_options = ["Market", "Relative", "국면", "유사국면", "Macro 분석", "모델전망 & Signal"]
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
     if selected_main_menu == "Market":
-        sub_menu_options = ["ChartBoard", "Relative"]
+        sub_menu_options = ["MarketBoard", "MarketChart"]
+
+    elif selected_main_menu == "Relative":
+        sub_menu_options = ["Relative(Trend)", "Relative(Momentum)", "현재위치"]
 
     elif selected_main_menu == "국면":
         sub_menu_options = ["Economic Cycle", "Credit Cycle"]
@@ -89,283 +252,606 @@ if authentication_status:
     elif selected_main_menu == "Macro 분석":
         sub_menu_options = ["Macro Driver"]
 
-    # elif selected_main_menu == "시나리오":
-    #    sub_menu_options = ["금리", "스프레드"]
-
     elif selected_main_menu == "모델전망 & Signal":
-        sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "FX"]
-
-    #elif selected_main_menu == "USIG 추천종목":
-    #    sub_menu_options = ["FACTOR", "DNN"]
-
-    # elif selected_main_menu == "Allocation":
-    #    sub_menu_options = ["Region", "US_Sector", "USIG_Sector"]
+        sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "Allocation", "FX", "FDS"]
 
     selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 
     if selected_main_menu == "Market":
-        if selected_sub_menu == "ChartBoard":
+        if selected_sub_menu == "MarketBoard":
 
-            st.title("Chart Borad")
+            st.title("MarketBoard")
 
-            df = pd.read_excel(series_path, sheet_name='P1_Raw')
-            selecpr = st.radio("", ["1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y"], horizontal=True)
-            edate = df['DATE'].max()
-            if selecpr == "1M":
-                sdate = edate - pd.DateOffset(months=1)
-            elif selecpr == "3M":
-                sdate = edate - pd.DateOffset(months=3)
-            elif selecpr == "6M":
-                sdate = edate - pd.DateOffset(months=6)
-            elif selecpr == "1Y":
-                sdate = edate - pd.DateOffset(years=1)
-            elif selecpr == "3Y":
-                sdate = edate - pd.DateOffset(years=3)
-            elif selecpr == "5Y":
-                sdate = edate - pd.DateOffset(years=5)
-            else:
-                sdate = edate - pd.DateOffset(years=10)
+            st.subheader("Global 10Y")
+            df1 = pd.read_excel(market_path, sheet_name='G10Y')
+            st.write("as of: ", df1['DATE'].max())
+            stable, grid_options = cal_table(df=df1, chgopt=2, spechk=1)
+            AgGrid(stable, gridOptions=grid_options, fit_columns_on_grid_load=True, allow_unsafe_jscode=True)
+
+            st.subheader("주요국 만기별 금리")
+            df2 = pd.read_excel(market_path, sheet_name='Cntry')
+            st.write("as of: ", df2['DATE'].max())
+            stable, grid_options = cal_table(df=df2, chgopt=2, spechk=2)
+            AgGrid(stable, gridOptions=grid_options, fit_columns_on_grid_load=True, allow_unsafe_jscode=True)
+
+            st.subheader("Credit Spread")
+            df3 = pd.read_excel(market_path, sheet_name='OAS')
+            st.write("as of: ", df3['DATE'].max())
+            stable, grid_options = cal_table(df=df3, chgopt=2, spechk=1)
+            AgGrid(stable, gridOptions=grid_options, fit_columns_on_grid_load=True, allow_unsafe_jscode=True)
+
+            st.subheader("FX")
+            df4 = pd.read_excel(market_path, sheet_name='FX')
+            st.write("as of: ", df4['DATE'].max())
+            stable, grid_options = cal_table(df=df4, chgopt=1, spechk=1)
+            AgGrid(stable, gridOptions=grid_options, fit_columns_on_grid_load=True, allow_unsafe_jscode=True)
+
+            st.subheader("Stock Index")
+            df5 = pd.read_excel(market_path, sheet_name='StockIndex')
+            st.write("as of: ", df5['DATE'].max())
+            stable, grid_options = cal_table(df=df5, chgopt=1, spechk=1)
+            AgGrid(stable, gridOptions=grid_options, fit_columns_on_grid_load=True, allow_unsafe_jscode=True)
+
+            st.subheader("SPX by Sector")
+            df6 = pd.read_excel(market_path, sheet_name='SPXsector')
+            st.write("as of: ", df6['DATE'].max())
+            stable, grid_options = cal_table(df=df6, chgopt=1, spechk=1)
+            AgGrid(stable, gridOptions=grid_options, fit_columns_on_grid_load=True, allow_unsafe_jscode=True)
+
+            st.subheader("Commodity(S&P GSCI)")
+            df7 = pd.read_excel(market_path, sheet_name='SPGSCI')
+            st.write("as of: ", df7['DATE'].max())
+            stable, grid_options = cal_table(df=df7, chgopt=1, spechk=1)
+            AgGrid(stable, gridOptions=grid_options, fit_columns_on_grid_load=True, allow_unsafe_jscode=True)
+
+            st.subheader("Energy(Oil & Gas)")
+            df8 = pd.read_excel(market_path, sheet_name='Energy')
+            st.write("as of: ", df8['DATE'].max())
+            stable, grid_options = cal_table(df=df8, chgopt=1, spechk=1)
+            AgGrid(stable, gridOptions=grid_options, fit_columns_on_grid_load=True, allow_unsafe_jscode=True)
+
+    if selected_main_menu == "Market":
+        if selected_sub_menu == "MarketChart":
+
+            st.title("Market Chart")
+
+            sel_cate = st.selectbox("Category",
+                                    ['All', 'Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy'])
 
 
-            def chartgen(vname, rawdf=df):
-                xdf = rawdf[['DATE', vname]]
-                fdf = xdf[(xdf['DATE'] >= pd.to_datetime(sdate)) & (xdf['DATE'] <= pd.to_datetime(edate))]
-                fdf = fdf.dropna()
-                fig1 = go.Figure()
-                fig1.add_trace(go.Scatter(x=fdf['DATE'], y=fdf[vname], name=vname, mode='lines'))
-                fig1.update_layout(
-                    xaxis_title='Date',
-                    yaxis_title=vname,
-                    template='plotly_dark'
+            def plot_ts(df, sel_colx, selecpr):
+                edate = df['DATE'].max()
+
+                if selecpr == "1M":
+                    sdate = edate - pd.DateOffset(months=1)
+                elif selecpr == "3M":
+                    sdate = edate - pd.DateOffset(months=3)
+                elif selecpr == "6M":
+                    sdate = edate - pd.DateOffset(months=6)
+                elif selecpr == "1Y":
+                    sdate = edate - pd.DateOffset(years=1)
+                elif selecpr == "3Y":
+                    sdate = edate - pd.DateOffset(years=3)
+                elif selecpr == "5Y":
+                    sdate = edate - pd.DateOffset(years=5)
+                else:
+                    sdate = edate - pd.DateOffset(years=10)
+
+                fdf = df[(df['DATE'] >= pd.to_datetime(sdate)) & (df['DATE'] <= pd.to_datetime(edate))]
+
+                columns = st.columns(4)
+                for i, col in enumerate(sel_colx):
+                    xdf = fdf[['DATE', col]]
+                    xdf = xdf.dropna()
+                    fig1 = go.Figure()
+                    fig1.add_trace(go.Scatter(x=xdf['DATE'], y=xdf[col], name=col, mode='lines'))
+                    fig1.update_layout(
+                        xaxis_title='Date',
+                        yaxis_title=col,
+                        template='plotly_dark'
+                    )
+                    with columns[i % 4]:
+                        st.subheader(col)
+                        st.plotly_chart(fig1)
+
+
+            if sel_cate in ['All', 'Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy']:
+
+                if sel_cate == "All":
+                    df1 = pd.read_excel(market_path, sheet_name="G10Y")
+                    df2 = pd.read_excel(market_path, sheet_name="OAS")
+                    df3 = pd.read_excel(market_path, sheet_name="FX")
+                    df4 = pd.read_excel(market_path, sheet_name="StockIndex")
+                    df5 = pd.read_excel(market_path, sheet_name="SPXsector")
+                    df6 = pd.read_excel(market_path, sheet_name="SPGSCI")
+                    df7 = pd.read_excel(market_path, sheet_name="Energy")
+                    dfs = [df1, df2, df3, df4, df5, df6, df7]
+                    df = reduce(lambda left, right: pd.merge(left, right, on='DATE', how='outer'), dfs)
+
+                else:
+                    if sel_cate == "Global 10Y":
+                        shtnm = "G10Y"
+                    elif sel_cate == "Credit Spread":
+                        shtnm = "OAS"
+                    elif sel_cate == "FX":
+                        shtnm = "FX"
+                    elif sel_cate == "StockIndex":
+                        shtnm = "StockIndex"
+                    elif sel_cate == "SPX Sector":
+                        shtnm = "SPXsector"
+                    elif sel_cate == "S&P GSCI":
+                        shtnm = "SPGSCI"
+                    elif sel_cate == "Energy":
+                        shtnm = "Energy"
+                    df = pd.read_excel(market_path, sheet_name=shtnm)
+
+                sel_cols = [col for col in df.columns if col != 'DATE']
+                sel_colx = st.multiselect(
+                    "Select:",
+                    sel_cols,
+                    default=sel_cols[:4]
                 )
-                return fig1
+                selecpr = st.radio("", ["1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y"], horizontal=True)
+                plot_ts(df, sel_colx, selecpr)
 
 
+    if selected_main_menu == "Relative":
+
+        if selected_sub_menu == "Relative(Trend)":
+
+            st.title("Relative(Trend)")
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
-                fig_US10Y = chartgen('USGG10YR')
-                st.subheader("USGG10YR")
-                st.plotly_chart(fig_US10Y)
-
-                fig_USIGOAS = chartgen('USIG_OAS')
-                st.subheader("USIG_OAS")
-                st.plotly_chart(fig_USIGOAS)
-
-                fig_MSCIA = chartgen('MSCI_ACWI')
-                st.subheader("MSCI_ACWI")
-                st.plotly_chart(fig_MSCIA)
-
-                fig_OIL = chartgen('OIL')
-                st.subheader("WTI")
-                st.plotly_chart(fig_OIL)
+                sel_cate1 = st.selectbox("Category1",
+                                         ['Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy'])
 
             with col2:
-                fig_US2Y = chartgen('USGG2YR')
-                st.subheader("USGG2YR")
-                st.plotly_chart(fig_US2Y)
+                if sel_cate1 == "Global 10Y":
+                    df1 = pd.read_excel(market_path, sheet_name="G10Y")
+                elif sel_cate1 == "Credit Spread":
+                    df1 = pd.read_excel(market_path, sheet_name="OAS")
+                elif sel_cate1 == "FX":
+                    df1 = pd.read_excel(market_path, sheet_name="FX")
+                elif sel_cate1 == "StockIndex":
+                    df1 = pd.read_excel(market_path, sheet_name="StockIndex")
+                elif sel_cate1 == "SPX Sector":
+                    df1 = pd.read_excel(market_path, sheet_name="SPXsector")
+                elif sel_cate1 == "S&P GSCI":
+                    df1 = pd.read_excel(market_path, sheet_name="SPGSCI")
+                elif sel_cate1 == "Energy":
+                    df1 = pd.read_excel(market_path, sheet_name="Energy")
 
-                fig_USHYOAS = chartgen('USHY_OAS')
-                st.subheader("USHY_OAS")
-                st.plotly_chart(fig_USHYOAS)
-
-                fig_MSCIE = chartgen('MSCI_EM')
-                st.subheader("MSCI_EM")
-                st.plotly_chart(fig_MSCIE)
-
-                fig_DXY = chartgen('DXY')
-                st.subheader("Dollar Index")
-                st.plotly_chart(fig_DXY)
+                columns = [col for col in df1.columns if col != 'DATE']
+                sel_cate11 = st.selectbox("Sel1(Y)", columns)
+                dfx1 = df1[['DATE', sel_cate11]]
+                dfx1 = dfx1.dropna()
 
             with col3:
-                fig_US5Y = chartgen('USGG5YR')
-                st.subheader("USGG5YR")
-                st.plotly_chart(fig_US5Y)
-
-                fig_SP500 = chartgen('SP500')
-                st.subheader("S&P500")
-                st.plotly_chart(fig_SP500)
-
-                fig_KOSPI = chartgen('KOSPI')
-                st.subheader("KOSPI")
-                st.plotly_chart(fig_KOSPI)
-
-                fig_USDKRW = chartgen('USDKRW')
-                st.subheader("USDKRW")
-                st.plotly_chart(fig_USDKRW)
+                sel_cate2 = st.selectbox("Category2",
+                                         ['Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy'])
 
             with col4:
-                fig_US30Y = chartgen('USGG30YR')
-                st.subheader("USGG30YR")
-                st.plotly_chart(fig_US30Y)
+                if sel_cate2 == "Global 10Y":
+                    df1 = pd.read_excel(market_path, sheet_name="G10Y")
+                elif sel_cate2 == "Credit Spread":
+                    df1 = pd.read_excel(market_path, sheet_name="OAS")
+                elif sel_cate2 == "FX":
+                    df1 = pd.read_excel(market_path, sheet_name="FX")
+                elif sel_cate2 == "StockIndex":
+                    df1 = pd.read_excel(market_path, sheet_name="StockIndex")
+                elif sel_cate2 == "SPX Sector":
+                    df1 = pd.read_excel(market_path, sheet_name="SPXsector")
+                elif sel_cate2 == "S&P GSCI":
+                    df1 = pd.read_excel(market_path, sheet_name="SPGSCI")
+                elif sel_cate2 == "Energy":
+                    df1 = pd.read_excel(market_path, sheet_name="Energy")
 
-                fig_NASDAQ = chartgen('NASDAQ')
-                st.subheader("NASDAQ")
-                st.plotly_chart(fig_NASDAQ)
+                columns = [col for col in df1.columns if col != 'DATE']
+                sel_cate21 = st.selectbox("Sel2(X)", columns)
+                dfx2 = df1[['DATE', sel_cate21]]
+                dfx2 = dfx2.dropna()
 
-                fig_GOLD = chartgen('GOLD')
-                st.subheader("GOLD")
-                st.plotly_chart(fig_GOLD)
+            col1, col2 = st.columns(2)
 
-    if selected_main_menu == "Market":
-        if selected_sub_menu == "Relative":
-
-            st.title("Relative")
-
-            try:
-                df = pd.read_excel(series_path, sheet_name='P1_Raw')
-
-                if 'DATE' in df.columns:
-                    df['DATE'] = pd.to_datetime(df['DATE'])
-                else:
-                    st.error("시트에 'DATE' 열이 없습니다.")
-                    st.stop()
-
-                columns = [col for col in df.columns if col != 'DATE']
-                col1, col2 = st.columns(2)
-
+            if sel_cate11 != '선택 없음':
                 with col1:
-                    selected_column1 = st.selectbox("Series1", ['선택 없음'] + columns)
+                    sdate = dfx1['DATE'].min().strftime('%Y/%m/%d')
+                    edate = dfx1['DATE'].max().strftime('%Y/%m/%d')
+                    st.header(f"Date: {sdate} ~ {edate}")
+                    start_date = st.date_input("Start", min_value=dfx1['DATE'].min(), max_value=dfx1['DATE'].max(),
+                                               value=dfx1['DATE'].min())
+                    st.write("")
                 with col2:
-                    selected_column2 = st.selectbox("Series2", ['선택 없음'] + columns)
+                    st.header("")
+                    end_date = st.date_input("End", min_value=dfx1['DATE'].min(), max_value=dfx1['DATE'].max(),
+                                             value=dfx1['DATE'].max())
+                    st.write("")
 
-                if selected_column1 != '선택 없음':
+                fdf = dfx1[(dfx1['DATE'] >= pd.to_datetime(start_date)) & (dfx1['DATE'] <= pd.to_datetime(end_date))]
+                st.subheader(f"{sel_cate11}")
+                recent_data1 = fdf[['DATE', sel_cate11]].tail(5)
+                recent_data1.set_index('DATE', inplace=True)
+                st.dataframe(recent_data1, use_container_width=True)
+
+                fig1 = go.Figure()
+                fig1.add_trace(
+                    go.Scatter(x=fdf['DATE'], y=fdf[sel_cate11], name=sel_cate11, mode='lines'))
+                fig1.update_layout(
+                    xaxis_title='Date',
+                    yaxis_title=sel_cate11,
+                    template='plotly_dark'
+                )
+
+                st.plotly_chart(fig1, use_container_width=True)
+
+                if sel_cate21 != '선택 없음' and sel_cate11 != sel_cate21:
+
                     with col1:
-                        sdate = df['DATE'].min().strftime('%Y/%m/%d')
-                        edate = df['DATE'].max().strftime('%Y/%m/%d')
-                        st.header(f"Date: {sdate} ~ {edate}")
-                        start_date = st.date_input("Start", min_value=df['DATE'].min(), max_value=df['DATE'].max(),
-                                                   value=df['DATE'].min())
+
+                        fdf = pd.merge(dfx1, dfx2, on='DATE', how='inner')
+                        corr = fdf[sel_cate11].corr(fdf[sel_cate21])
+
+                        X = fdf[[sel_cate21]]
+                        y = fdf[sel_cate11]
+                        model = LinearRegression()
+                        model.fit(X, y)
+                        reg_coeff = model.coef_[0]
+
                         st.write("")
+                        st.write("")
+                        st.subheader(f"{sel_cate11} & {sel_cate21}")
+                        st.write("Correlation:", round(corr, 4))
+                        st.write("Regression Coefficient:", round(reg_coeff, 2))
+
+                        recent_data2 = fdf[['DATE', sel_cate11, sel_cate21]].tail(5)
+                        recent_data2.set_index('DATE', inplace=True)
+                        st.dataframe(recent_data2, use_container_width=True)
+
+                        fig2 = go.Figure()
+                        fig2.add_trace(
+                            go.Scatter(x=fdf['DATE'], y=fdf[sel_cate11], name=sel_cate11, mode='lines'))
+                        fig2.add_trace(
+                            go.Scatter(x=fdf['DATE'], y=fdf[sel_cate21], name=sel_cate21, mode='lines',
+                                       yaxis='y2'))
+
+                        fig2.update_layout(
+                            xaxis_title='Date',
+                            yaxis_title=sel_cate11,
+                            yaxis2=dict(
+                                title=sel_cate21,
+                                overlaying='y',
+                                side='right'
+                            ),
+                            template='plotly_dark',
+                            legend=dict(
+                                orientation='h',
+                                yanchor='top',
+                                y=1.1,
+                                xanchor='center',
+                                x=0.5
+                            )
+                        )
+                        st.plotly_chart(fig2, use_container_width=True)
+
                     with col2:
-                        st.header("")
-                        end_date = st.date_input("End", min_value=df['DATE'].min(), max_value=df['DATE'].max(),
-                                                 value=df['DATE'].max())
-                        st.write("")
-                    fdf = df[(df['DATE'] >= pd.to_datetime(start_date)) & (df['DATE'] <= pd.to_datetime(end_date))]
-                    st.subheader(f"{selected_column1}")
-                    recent_data1 = fdf[['DATE', selected_column1]].tail(5)
-                    recent_data1.set_index('DATE', inplace=True)
-                    st.dataframe(recent_data1, use_container_width=True)
+                        selectr = st.radio("Relative:",
+                                           ["Spread", "Ratio"]
+                                           )
 
-                    fig1 = go.Figure()
-                    fig1.add_trace(
-                        go.Scatter(x=fdf['DATE'], y=fdf[selected_column1], name=selected_column1, mode='lines'))
-                    fig1.update_layout(
-                        xaxis_title='Date',
-                        yaxis_title=selected_column1,
-                        template='plotly_dark'
-                    )
+                        if selectr == "Spread":
+                            fdf['rel'] = fdf[sel_cate11] - fdf[sel_cate21]
+                            st.subheader(f"Spr({sel_cate11}-{sel_cate21})")
+                        elif selectr == "Ratio":
+                            fdf['rel'] = fdf[sel_cate11] / fdf[sel_cate21]
+                            st.subheader(f"Ratio({sel_cate11}/{sel_cate21})")
 
-                    st.plotly_chart(fig1, use_container_width=True)
+                        recent_data3 = fdf[['DATE', 'rel']].tail(5)
+                        recent_data3.set_index('DATE', inplace=True)
+                        st.dataframe(recent_data3, use_container_width=True)
 
-                    if selected_column2 != '선택 없음' and selected_column1 != selected_column2:
-
-                        with col1:
-                            st.write("")
-                            st.write("")
-                            st.write("")
-                            st.write("")
-                            st.write("")
-                            st.write("")
-                            st.subheader(f"{selected_column1} & {selected_column2}")
-                            recent_data2 = fdf[['DATE', selected_column1, selected_column2]].tail(5)
-                            recent_data2.set_index('DATE', inplace=True)
-                            st.dataframe(recent_data2, use_container_width=True)
-
-                            fig2 = go.Figure()
-                            fig2.add_trace(
-                                go.Scatter(x=fdf['DATE'], y=fdf[selected_column1], name=selected_column1, mode='lines'))
-                            fig2.add_trace(
-                                go.Scatter(x=fdf['DATE'], y=fdf[selected_column2], name=selected_column2, mode='lines',
-                                           yaxis='y2'))
-
-                            fig2.update_layout(
-                                xaxis_title='Date',
-                                yaxis_title=selected_column1,
-                                yaxis2=dict(
-                                    title=selected_column2,
-                                    overlaying='y',
-                                    side='right'
-                                ),
-                                template='plotly_dark',
-                                legend=dict(
-                                    orientation='h',
-                                    yanchor='top',
-                                    y=1.1,
-                                    xanchor='center',  # 범례의 x축 앵커를 가운데로
-                                    x=0.5
-                                )
-                            )
-                            st.plotly_chart(fig2, use_container_width=True)
-
-                        with col2:
-                            selectr = st.radio("Relative:",
-                                               ["Spread", "Ratio"]
-                                               )
-
-                            if selectr == "Spread":
-                                fdf['rel'] = fdf[selected_column1] - fdf[selected_column2]
-                                st.subheader(f"Spr({selected_column1}-{selected_column2})")
-                            elif selectr == "Ratio":
-                                fdf['rel'] = fdf[selected_column1] / fdf[selected_column2]
-                                st.subheader(f"Ratio({selected_column1}/{selected_column2})")
-
-                            recent_data3 = fdf[['DATE', 'rel']].tail(5)
-                            recent_data3.set_index('DATE', inplace=True)
-                            st.dataframe(recent_data3, use_container_width=True)
-
-                            fig3 = go.Figure()
-                            fig3.add_trace(go.Scatter(x=fdf['DATE'], y=fdf['rel'], name='relative', mode='lines',
-                                                      line=dict(color='orange')))
-                            fig3.update_layout(
-                                xaxis_title='Date',
-                                yaxis_title='relative',
-                                template='plotly_dark'
-                            )
-                            st.plotly_chart(fig3, use_container_width=True)
+                        fig3 = go.Figure()
+                        fig3.add_trace(go.Scatter(x=fdf['DATE'], y=fdf['rel'], name='relative', mode='lines',
+                                                  line=dict(color='orange')))
+                        fig3.update_layout(
+                            xaxis_title='Date',
+                            yaxis_title='relative',
+                            template='plotly_dark'
+                        )
+                        st.plotly_chart(fig3, use_container_width=True)
 
 
-                def convert_df_to_csv(df):
-                    return df.to_csv(index=False).encode('utf-8')
+            def convert_df_to_csv(df):
+                return df.to_csv(index=False).encode('utf-8')
+
+            # 선택된 열의 데이터만 추출
+            if sel_cate11 != '선택 없음' and sel_cate21 != '선택 없음' and sel_cate11 != sel_cate21:
+                data_to_download = fdf[['DATE', sel_cate11, sel_cate21, 'rel']]
+                csv_data = convert_df_to_csv(data_to_download)
+                st.download_button(
+                    label="Data Download(CSV)",
+                    data=csv_data,
+                    file_name='timeseries_data.csv',
+                    mime='text/csv'
+                )
+            elif ((sel_cate11 != '선택 없음' and sel_cate21 == '선택 없음') or
+                  (sel_cate11 != '선택 없음' and sel_cate11 == sel_cate21)):
+                data_to_download = fdf[['DATE', sel_cate11]]
+                csv_data = convert_df_to_csv(data_to_download)
+                st.download_button(
+                    label="Data Download(CSV)",
+                    data=csv_data,
+                    file_name='timeseries_data.csv',
+                    mime='text/csv'
+                )
+            else:
+                pass
+
+        elif selected_sub_menu == "Relative(Momentum)":
+
+            st.title("Relative(Momentum)")
+            col1, col2 = st.columns(2)
+
+            with col1:
+                sel_cate = st.selectbox("Category",
+                                        ['Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy'])
+
+                if sel_cate == "Global 10Y":
+                    df = pd.read_excel(market_path, sheet_name="G10Y")
+                    chgopt = 2
+                elif sel_cate == "Credit Spread":
+                    df = pd.read_excel(market_path, sheet_name="OAS")
+                    chgopt = 2
+                elif sel_cate == "FX":
+                    df = pd.read_excel(market_path, sheet_name="FX")
+                    chgopt = 1
+                elif sel_cate == "StockIndex":
+                    df = pd.read_excel(market_path, sheet_name="StockIndex")
+                    chgopt = 1
+                elif sel_cate == "SPX Sector":
+                    df = pd.read_excel(market_path, sheet_name="SPXsector")
+                    chgopt = 1
+                elif sel_cate == "S&P GSCI":
+                    df = pd.read_excel(market_path, sheet_name="SPGSCI")
+                    chgopt = 1
+                elif sel_cate == "Energy":
+                    df = pd.read_excel(market_path, sheet_name="Energy")
+                    chgopt = 1
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                selecpr1 = st.radio("X-axis", ["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y", "MTD", "YTD"], horizontal=True)
+            with col2:
+                selecpr2 = st.radio("Y-axis", ["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y", "MTD", "YTD"], horizontal=True)
+
+            if selecpr1 == "1W":
+                chg1 = calculate_change_with_offset(df, chgopt, days_offset=5)
+            elif selecpr1 == "1M":
+                chg1 = calculate_change_with_offset(df, chgopt, months_offset=1)
+            elif selecpr1 == "3M":
+                chg1 = calculate_change_with_offset(df, chgopt, months_offset=3)
+            elif selecpr1 == "6M":
+                chg1 = calculate_change_with_offset(df, chgopt, months_offset=6)
+            elif selecpr1 == "1Y":
+                chg1 = calculate_change_with_offset(df, chgopt, years_offset=1)
+            elif selecpr1 == "2Y":
+                chg1 = calculate_change_with_offset(df, chgopt, years_offset=2)
+            elif selecpr1 == "3Y":
+                chg1 = calculate_change_with_offset(df, chgopt, years_offset=3)
+            elif selecpr1 == "5Y":
+                chg1 = calculate_change_with_offset(df, chgopt, years_offset=5)
+            elif selecpr1 == "10Y":
+                chg1 = calculate_change_with_offset(df, chgopt, years_offset=10)
+            elif selecpr1 == "MTD":
+                chg1 = calculate_change_with_offset(df, chgopt, days_offset=df['DATE'].iloc[-1].day - 1)
+            elif selecpr1 == "YTD":
+                chg1 = calculate_change_with_offset(df, chgopt,days_offset=df['DATE'].iloc[-1].timetuple().tm_yday - 1)
+
+            chg1 = pd.DataFrame(chg1).reset_index()
+            chg1.rename(columns={chg1.columns[0]: 'X', chg1.columns[1]: f"X_{selecpr1}"}, inplace=True)
+
+            if selecpr2 == "1W":
+                chg2 = calculate_change_with_offset(df, chgopt, days_offset=5)
+            elif selecpr2 == "1M":
+                chg2 = calculate_change_with_offset(df, chgopt, months_offset=1)
+            elif selecpr2 == "3M":
+                chg2 = calculate_change_with_offset(df, chgopt, months_offset=3)
+            elif selecpr2 == "6M":
+                chg2 = calculate_change_with_offset(df, chgopt, months_offset=6)
+            elif selecpr2 == "1Y":
+                chg2 = calculate_change_with_offset(df, chgopt, years_offset=1)
+            elif selecpr2 == "2Y":
+                chg2 = calculate_change_with_offset(df, chgopt, years_offset=2)
+            elif selecpr2 == "3Y":
+                chg2 = calculate_change_with_offset(df, chgopt, years_offset=3)
+            elif selecpr2 == "5Y":
+                chg2 = calculate_change_with_offset(df, chgopt, years_offset=5)
+            elif selecpr2 == "10Y":
+                chg2 = calculate_change_with_offset(df, chgopt, years_offset=10)
+            elif selecpr2 == "MTD":
+                chg2 = calculate_change_with_offset(df, chgopt, days_offset=df['DATE'].iloc[-1].day - 1)
+            elif selecpr2 == "YTD":
+                chg2 = calculate_change_with_offset(df, chgopt, days_offset=df['DATE'].iloc[-1].timetuple().tm_yday - 1)
+
+            chg2 = pd.DataFrame(chg2).reset_index()
+            chg2.rename(columns={chg2.columns[0]: 'X', chg2.columns[1]: f"Y_{selecpr2}"}, inplace=True)
+
+            chgx = pd.merge(chg1, chg2, on='X', how='inner')
+            names = chgx['X'].unique()
+            sel_nms = st.multiselect("Select", options=names, default=names)
+            chgxf = chgx[chgx['X'].isin(sel_nms)]
+
+            X = chgxf[[f"X_{selecpr1}"]].values
+            y = chgxf[f"Y_{selecpr2}"].values
+            model = LinearRegression()
+            model.fit(X, y)
+            slope = model.coef_[0]
+            intercept = model.intercept_
+            x_values = np.linspace(chgxf[f"X_{selecpr1}"].min(), chgxf[f"X_{selecpr1}"].max(), 100)
+            y_values = slope * x_values + intercept
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=chgxf[f"X_{selecpr1}"],
+                y=chgxf[f"Y_{selecpr2}"],
+                mode='markers+text',
+                text=chgxf['X'],
+                textposition='top right',
+                marker=dict(size=10)
+            ))
+            fig.add_trace(go.Scatter(
+                x=x_values,
+                y=y_values,
+                mode='lines',
+                line=dict(color='red', dash='dash'),
+                name='Regression Line'
+            ))
+
+            fig.update_layout(
+                title='Scatter Plot',
+                xaxis_title=f"X_{selecpr1}",
+                yaxis_title=f"Y_{selecpr2}",
+                template='plotly_dark',
+                height=800
+            )
+            st.plotly_chart(fig)
+
+        elif selected_sub_menu == "현재위치":
+
+            st.title("현재위치")
+            col1, col2 = st.columns(2)
+
+            with col1:
+                sel_cate = st.selectbox("Category",
+                                        ['Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy'])
+
+                if sel_cate == "Global 10Y":
+                    df = pd.read_excel(market_path, sheet_name="G10Y")
+                elif sel_cate == "Credit Spread":
+                    df = pd.read_excel(market_path, sheet_name="OAS")
+                elif sel_cate == "FX":
+                    df = pd.read_excel(market_path, sheet_name="FX")
+                elif sel_cate == "StockIndex":
+                    df = pd.read_excel(market_path, sheet_name="StockIndex")
+                elif sel_cate == "SPX Sector":
+                    df = pd.read_excel(market_path, sheet_name="SPXsector")
+                elif sel_cate == "S&P GSCI":
+                    df = pd.read_excel(market_path, sheet_name="SPGSCI")
+                elif sel_cate == "Energy":
+                    df = pd.read_excel(market_path, sheet_name="Energy")
+
+            col1, col2 = st.columns(2)
+            with col1:
+                selecpr = st.radio("분석기간", ["1Y", "3Y", "5Y", "10Y", "Max"], horizontal=True)
+
+                edate = df['DATE'].max()
+                if selecpr == "1Y":
+                    sdate = edate - pd.DateOffset(years=1)
+                elif selecpr == "3Y":
+                    sdate = edate - pd.DateOffset(years=3)
+                elif selecpr == "5Y":
+                    sdate = edate - pd.DateOffset(years=5)
+                elif selecpr == "10Y":
+                    sdate = edate - pd.DateOffset(years=10)
+                elif selecpr == "Max":
+                    sdate = df['DATE'].min()
+
+                fdf = df[(df['DATE'] >= pd.to_datetime(sdate)) & (df['DATE'] <= pd.to_datetime(edate))]
+
+            with col2:
+                st.write("분석날짜")
+                st.write(sdate, "~", edate)
 
 
-                # 선택된 열의 데이터만 추출
-                if selected_column1 != '선택 없음' and selected_column2 != '선택 없음' and selected_column1 != selected_column2:
-                    data_to_download = fdf[['DATE', selected_column1, selected_column2, 'rel']]
-                    csv_data = convert_df_to_csv(data_to_download)
-                    st.download_button(
-                        label="Data Download(CSV)",
-                        data=csv_data,
-                        file_name='timeseries_data.csv',
-                        mime='text/csv'
-                    )
-                elif ((selected_column1 != '선택 없음' and selected_column2 == '선택 없음') or
-                      (selected_column1 != '선택 없음' and selected_column1 == selected_column2)):
-                    data_to_download = fdf[['DATE', selected_column1]]
-                    csv_data = convert_df_to_csv(data_to_download)
-                    st.download_button(
-                        label="Data Download(CSV)",
-                        data=csv_data,
-                        file_name='timeseries_data.csv',
-                        mime='text/csv'
-                    )
-                else:
-                    pass
-            except FileNotFoundError:
-                st.error("파일을 찾을 수 없습니다. 경로를 확인하세요.")
-            except Exception as e:
-                st.error(f"파일을 열 수 없습니다: {e}")
+            def genbar(df, min_value, max_value, current_value, curv_trans, title):
+                percentile = (current_value - min_value) / (max_value - min_value) * 100
 
-        elif selected_sub_menu == "Descriptive":
-            st.title("Descriptive")
-            st.write("Descriptive")
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=[0, 1], y=[0, 0],
+                    mode='lines', line=dict(color='gray', width=2), showlegend=False
+                ))
+                fig.add_trace(go.Scatter(
+                    x=[curv_trans], y=[0],
+                    mode='markers', marker=dict(color='red', size=10), showlegend=False
+                ))
+                fig.add_annotation(
+                    x=0, y=0,
+                    text=title,
+                    showarrow=False, font=dict(size=16), bgcolor="white", xanchor='right', yanchor='bottom',
+                    yshift=20
+                )
+                fig.add_annotation(
+                    x=0, y=0,
+                    text=f'{min_value:.2f}',
+                    showarrow=True, arrowhead=2, ax=-30, ay=0, font=dict(size=16), bgcolor="white"
+                )
+                fig.add_annotation(
+                    x=1, y=0,
+                    text=f'{max_value:.2f}',
+                    showarrow=True, arrowhead=2, ax=30, ay=0, font=dict(size=16), bgcolor="white"
+                )
+                fig.add_annotation(
+                    x=curv_trans, y=0,
+                    text=f'{current_value:.2f} ({percentile:.2f}%)',
+                    showarrow=False, font=dict(size=16), bgcolor="white", xanchor='left', yshift=20
+                )
+                fig.update_layout(
+                    showlegend=False,
+                    xaxis=dict(
+                        range=[-0.1, 1.1],
+                        title='Value', title_text='', showticklabels=True, visible=False, zeroline=False
+                    ),
+                    yaxis=dict(
+                        visible=False, zeroline=False
+                    ),
+                    height=150,
+                    width=1200
+                )
+
+                return fig
+
+            sel_cols = [col for col in fdf.columns if col != 'DATE']
+            sel_colx = st.multiselect(
+                "Select:",
+                sel_cols,
+                default=sel_cols
+            )
+
+            # 선택된 변수들에 대한 데이터 필터링
+            fdfx = fdf[sel_colx]
+            currv = fdfx.iloc[-1]
+
+            if not fdfx.empty:
+                for col in sel_colx:
+                    min_value = fdfx[col].min()
+                    max_value = fdfx[col].max()
+                    current_value = currv[col]
+                    fdfn = (fdfx[col] - min_value) / (max_value - min_value)
+                    fdfn = pd.DataFrame(fdfn)
+                    fdfn.columns = [col]
+                    curv_trans = fdfn.iloc[-1].values.item()
+                    fig = genbar(fdfn, min_value, max_value, current_value, curv_trans, title=col)
+                    #st.write(min_value, max_value, current_value, curv_trans)
+                    st.plotly_chart(fig)
+            else:
+                st.write('No variables selected or no data available.')
 
     elif selected_main_menu == "국면":
         if selected_sub_menu == "Economic Cycle":
             st.title("Economic Cycle")
 
-            tseries = pd.read_excel(series_path, sheet_name='P1_Raw')
+            df1 = pd.read_excel(market_path, sheet_name="G10Y")
+            df2 = pd.read_excel(market_path, sheet_name="OAS")
+            df3 = pd.read_excel(market_path, sheet_name="FX")
+            df4 = pd.read_excel(market_path, sheet_name="StockIndex")
+            df5 = pd.read_excel(market_path, sheet_name="SPXsector")
+            df6 = pd.read_excel(market_path, sheet_name="SPGSCI")
+            df7 = pd.read_excel(market_path, sheet_name="Energy")
+            dfs = [df1, df2, df3, df4, df5, df6, df7]
+            tseries = reduce(lambda left, right: pd.merge(left, right, on='DATE', how='outer'), dfs)
+
             if 'DATE' in tseries.columns:
                 tseries['DATE'] = pd.to_datetime(tseries['DATE'])
             else:
@@ -451,7 +937,7 @@ if authentication_status:
                     xanchor='center',  # 범례의 x축 앵커를 가운데로
                     x=0.5
                 ),
-                autosize=True
+                height=800
             )
 
             st.plotly_chart(fig)
@@ -459,7 +945,16 @@ if authentication_status:
         elif selected_sub_menu == "Credit Cycle":
             st.title("Credit Cycle")
 
-            tseries = pd.read_excel(series_path, sheet_name='P1_Raw')
+            df1 = pd.read_excel(market_path, sheet_name="G10Y")
+            df2 = pd.read_excel(market_path, sheet_name="OAS")
+            df3 = pd.read_excel(market_path, sheet_name="FX")
+            df4 = pd.read_excel(market_path, sheet_name="StockIndex")
+            df5 = pd.read_excel(market_path, sheet_name="SPXsector")
+            df6 = pd.read_excel(market_path, sheet_name="SPGSCI")
+            df7 = pd.read_excel(market_path, sheet_name="Energy")
+            dfs = [df1, df2, df3, df4, df5, df6, df7]
+            tseries = reduce(lambda left, right: pd.merge(left, right, on='DATE', how='outer'), dfs)
+
             if 'DATE' in tseries.columns:
                 tseries['DATE'] = pd.to_datetime(tseries['DATE'])
             else:
@@ -545,7 +1040,7 @@ if authentication_status:
                     xanchor='center',  # 범례의 x축 앵커를 가운데로
                     x=0.5
                 ),
-                autosize=True
+                height=800
             )
 
             st.plotly_chart(fig)
@@ -704,10 +1199,6 @@ if authentication_status:
                 st.plotly_chart(fig_EMSOV)
                 st.plotly_chart(fig_OIL)
 
-        elif selected_sub_menu == "유사국면2":
-            st.title("유사국면2")
-            st.write("유사국면2")
-
     elif selected_main_menu == "Macro 분석":
         if selected_sub_menu == "Macro Driver":
 
@@ -731,7 +1222,16 @@ if authentication_status:
                     """
             st.markdown(html, unsafe_allow_html=True)
 
-            dfseries = pd.read_excel(series_path, sheet_name='P1_Raw')
+            df1 = pd.read_excel(market_path, sheet_name="G10Y")
+            df2 = pd.read_excel(market_path, sheet_name="OAS")
+            df3 = pd.read_excel(market_path, sheet_name="FX")
+            df4 = pd.read_excel(market_path, sheet_name="StockIndex")
+            df5 = pd.read_excel(market_path, sheet_name="SPXsector")
+            df6 = pd.read_excel(market_path, sheet_name="SPGSCI")
+            df7 = pd.read_excel(market_path, sheet_name="Energy")
+            dfs = [df1, df2, df3, df4, df5, df6, df7]
+            dfseries = reduce(lambda left, right: pd.merge(left, right, on='DATE', how='outer'), dfs)
+
             dfmeta = pd.read_excel(macro_path, sheet_name='META')
             dfd = pd.read_excel(macro_path, sheet_name='DAILYV', skiprows=1)
             dfw = pd.read_excel(macro_path, sheet_name='WEEKLYV', skiprows=1)
@@ -1007,7 +1507,7 @@ if authentication_status:
             html = """
                     <style>
                         .custom-text {
-                            line-height: 1.2; /* 행간을 줄이는 CSS 속성 */
+                            line-height: 1.2;
                         }
                     </style>
                     <div class="custom-text">
@@ -1335,14 +1835,94 @@ if authentication_status:
                 st.plotly_chart(fig_USDGBP1)
                 st.plotly_chart(fig_USDJPY1)
 
+        elif selected_sub_menu == "Allocation":
+            st.title("Allocation Model Output")
 
-    elif selected_main_menu == "시나리오":
-        if selected_sub_menu == "금리":
-            st.title("금리")
-            st.write("금리")
-        elif selected_sub_menu == "스프레드":
-            st.title("스프레드")
-            st.write("스프레드")
+            st.write("")
+            st.subheader("I. Golbal Agg: US vs. Non-US")
+            st.write("")
+            df = pd.read_excel(allo_path, sheet_name='USIGSector')
+
+            st.subheader("II. Golbal Agg: US Sector")
+            st.write("")
+            df = pd.read_excel(allo_path, sheet_name='USIGSector')
+
+            st.subheader("III. Golbal Agg: US Treasury")
+            st.write("")
+            df = pd.read_excel(allo_path, sheet_name='USIGSector')
+
+            st.subheader("IV. Golbal Agg: US Corporate")
+            st.write("")
+            df = pd.read_excel(allo_path, sheet_name='USIGSector')
+
+            st.subheader("V. USIG Sector Allocation")
+            st.write("")
+
+            df = pd.read_excel(allo_path, sheet_name='USIGSector')
+            dates = df['DATE'].unique()[::-1]
+
+            sel_latest = df[df['DATE'] == dates[0]]
+            sel_latest['DATE'] = pd.to_datetime(sel_latest['DATE'])
+            date_maxsel = sel_latest['DATE'].iloc[0]
+            formatted_date = date_maxsel.strftime('%Y.%m')
+
+            labelsl = [sel_latest.iloc[0]['Label01'], sel_latest.iloc[0]['Label02'], sel_latest.iloc[0]['Label03'],
+                       sel_latest.iloc[0]['Label04'], sel_latest.iloc[0]['Label05'], sel_latest.iloc[0]['Label06'],
+                       sel_latest.iloc[0]['Label07']]
+            probl = [sel_latest.iloc[0]['Fret01'], sel_latest.iloc[0]['Fret02'], sel_latest.iloc[0]['Fret03'],
+                     sel_latest.iloc[0]['Fret04'], sel_latest.iloc[0]['Fret05'], sel_latest.iloc[0]['Fret06'],
+                     sel_latest.iloc[0]['Fret07']]
+            labels_df = pd.DataFrame({
+                'Rank': labelsl, 'Prob(>BM)': probl
+            })
+            labels_df = labels_df.style.format({
+                'Prob(>BM)': lambda x: f"{x * 100:.1f}%"
+            })
+
+            dates = dates[1:4]
+
+
+            def getbardt(df, dtrow):
+                sel_df = df[df['DATE'] == dates[dtrow]]
+                labels = [sel_df.iloc[0]['Label01'], sel_df.iloc[0]['Label02'], sel_df.iloc[0]['Label03'],
+                          sel_df.iloc[0]['Label04'], sel_df.iloc[0]['Label05'], sel_df.iloc[0]['Label06'],
+                          sel_df.iloc[0]['Label07'], sel_df.iloc[0]['Label00']]
+                values = [sel_df.iloc[0]['Fret01'], sel_df.iloc[0]['Fret02'], sel_df.iloc[0]['Fret03'],
+                          sel_df.iloc[0]['Fret04'], sel_df.iloc[0]['Fret05'], sel_df.iloc[0]['Fret06'],
+                          sel_df.iloc[0]['Fret07'], sel_df.iloc[0]['Fret00']]
+                fig = go.Figure(data=[
+                    go.Bar(
+                        x=labels,
+                        y=values,
+                        marker_color=['blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'red']
+                    )
+                ])
+                fig.update_layout(
+                    title=f"{dates[dtrow]}",
+                    xaxis_title="추천순위",
+                    yaxis_title="실제성과",
+                )
+                fig.update_yaxes(range=[min(values) - (0.1 * min(values)), max(values) + (0.1 * max(values))])
+                return fig
+
+
+            fig1 = getbardt(df, 0)
+            fig2 = getbardt(df, 1)
+            fig3 = getbardt(df, 2)
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.write("")
+                st.subheader(f"{formatted_date}월의 순위 예측")
+                st.write("")
+                st.dataframe(labels_df, use_container_width=True, hide_index=True)
+            with col2:
+                st.plotly_chart(fig1)
+            with col3:
+                st.plotly_chart(fig2)
+            with col4:
+                st.plotly_chart(fig3)
+
 
     authenticator.logout('Logout', 'sidebar')
 
