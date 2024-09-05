@@ -29,7 +29,7 @@ market_path = "data/streamlit_24_marketVV.xlsx"
 allo_path = "data/streamlit_24_allocation.xlsx"
 image_path = "images/miraeasset.png"
 igimage_path = "images/usig.png"
-
+#
 # series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
 # cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
 # simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
@@ -238,7 +238,7 @@ if authentication_status:
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
     if selected_main_menu == "Market":
-        sub_menu_options = ["MarketBoard", "MarketChart"]
+        sub_menu_options = ["MarketBoard", "MarketChart", "주요국 만기별 금리"]
 
     elif selected_main_menu == "Relative":
         sub_menu_options = ["Relative(Trend)", "Relative(Momentum)", "현재위치"]
@@ -253,7 +253,7 @@ if authentication_status:
         sub_menu_options = ["Macro Driver"]
 
     elif selected_main_menu == "모델전망 & Signal":
-        sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "Allocation", "FX", "FDS"]
+        sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "Allocation", "FX"]
 
     selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 
@@ -310,8 +310,7 @@ if authentication_status:
             stable, grid_options = cal_table(df=df8, chgopt=1, spechk=1)
             AgGrid(stable, gridOptions=grid_options, fit_columns_on_grid_load=True, allow_unsafe_jscode=True)
 
-    if selected_main_menu == "Market":
-        if selected_sub_menu == "MarketChart":
+        elif selected_sub_menu == "MarketChart":
 
             st.title("Market Chart")
 
@@ -394,6 +393,102 @@ if authentication_status:
                 selecpr = st.radio("", ["1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y"], horizontal=True)
                 plot_ts(df, sel_colx, selecpr)
 
+        elif selected_sub_menu == "주요국 만기별 금리":
+
+            st.title("주요국 만기별 금리")
+            df = pd.read_excel(market_path, sheet_name='Cntry')
+            st.write("as of: ", df['DATE'].max())
+
+            sel_cntry = st.selectbox("Country",
+                                     ['US', 'UK', 'Germany', 'Italy', 'Jppan', 'China', 'Australia'])
+
+            sdt = st.date_input("Start", min_value=df['DATE'].min(), max_value=df['DATE'].max(), value=df['DATE'].min())
+
+            st.write("")
+
+
+            sels = ['DATE'] + [col for col in df.columns if col.startswith(sel_cntry)]
+            dfx = df[sels]
+            dfx = dfx[(dfx['DATE'] >= pd.to_datetime(sdt))]
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader(f"{sel_cntry}: 만기별 금리")
+                sel_cols = [col for col in dfx.columns if col != 'DATE']
+                sel_colx = st.multiselect(
+                    "Select:",
+                    sel_cols,
+                    default=sel_cols
+                )
+                dfxx = dfx[['DATE'] + sel_colx]
+
+                fig1 = go.Figure()
+                for col in dfxx.columns:
+                    if col != 'DATE':
+                        fig1.add_trace(go.Scatter(x=dfxx['DATE'], y=dfxx[col], name=col, mode='lines'))
+                st.plotly_chart(fig1)
+
+            with col2:
+                st.subheader(f"{sel_cntry}: 장단기 스프레드 추이")
+                if sel_cntry != "China":
+                    xcol = [col for col in dfx.columns if
+                           col.startswith(sel_cntry) and col[len(sel_cntry):] in [' 2Y', ' 5Y', ' 10Y', ' 30Y']]
+                    xcol = ['DATE'] + xcol
+                    dfy = dfx[xcol]
+                    dfy['Spr_2_5'] = dfy.iloc[:, 2] - dfy.iloc[:, 1]
+                    dfy['Spr_2_10'] = dfy.iloc[:, 3] - dfy.iloc[:, 1]
+                    dfy['Spr_2_30'] = dfy.iloc[:, 4] - dfy.iloc[:, 1]
+                    dfy['Spr_5_10'] = dfy.iloc[:, 3] - dfy.iloc[:, 2]
+                    dfy['Spr_5_30'] = dfy.iloc[:, 4] - dfy.iloc[:, 2]
+                    dfy['Spr_10_30'] = dfy.iloc[:, 4] - dfy.iloc[:, 3]
+                    dfy = dfy[['DATE', 'Spr_2_5', 'Spr_2_10', 'Spr_2_30', 'Spr_5_10', 'Spr_5_30', 'Spr_10_30']]
+                elif sel_cntry == "China":
+                    xcol = [col for col in dfx.columns if
+                            col.startswith(sel_cntry) and col[len(sel_cntry):] in [' 2Y', ' 5Y', ' 10Y']]
+                    xcol = ['DATE'] + xcol
+                    dfy = dfx[xcol]
+                    dfy['Spr_2_5'] = dfy.iloc[:, 2] - dfy.iloc[:, 1]
+                    dfy['Spr_2_10'] = dfy.iloc[:, 3] - dfy.iloc[:, 1]
+                    dfy['Spr_5_10'] = dfy.iloc[:, 3] - dfy.iloc[:, 2]
+                    dfy = dfy[['DATE', 'Spr_2_5', 'Spr_2_10', 'Spr_5_10']]
+
+                dfyy = dfy[(dfy['DATE'] >= pd.to_datetime(sdt))]
+                sel_cols = [col for col in dfyy.columns if col != 'DATE']
+                sel_coly = st.multiselect(
+                    "Select:",
+                    sel_cols,
+                    default=sel_cols
+                )
+                dfyyy = dfyy[['DATE'] + sel_coly]
+
+                fig1 = go.Figure()
+                for col in dfyyy.columns:
+                    if col != 'DATE':
+                        fig1.add_trace(go.Scatter(x=dfyyy['DATE'], y=dfyyy[col], name=col, mode='lines'))
+
+                st.plotly_chart(fig1)
+
+            dfyyy['DATE'] = pd.to_datetime(dfyyy['DATE'])
+            df_fri = dfyyy[dfyyy['DATE'].dt.dayofweek == 4]
+            df_frif = df_fri.tail(4)
+            cola = [col for col in df_frif.columns if col != 'DATE']
+
+            fig = make_subplots(rows=1, cols=len(cola), shared_yaxes=True,
+                                subplot_titles=cola)
+
+            for i, col in enumerate(cola, start=1):
+                ftext = df_frif[col].apply(lambda x: f'{x:.3f}')
+                fig.add_trace(go.Bar(x=df_frif['DATE'], y=df_frif[col], name=col, text=ftext, textposition='outside'),
+                              row=1, col=i)
+
+            fig.update_layout(
+                title="최근 4주 추이",
+                xaxis_title="Date",
+                yaxis_title="Spr",
+                barmode='group',
+                height=400
+            )
+            st.plotly_chart(fig)
 
     if selected_main_menu == "Relative":
 
@@ -819,7 +914,6 @@ if authentication_status:
                 default=sel_cols
             )
 
-            # 선택된 변수들에 대한 데이터 필터링
             fdfx = fdf[sel_colx]
             currv = fdfx.iloc[-1]
 
@@ -1404,7 +1498,7 @@ if authentication_status:
                     <div class="custom-text">
                         <p>1. 좌축: 주황색 영역이 +/- 이면, 금리 하락/상승 시그널이며, 없으면 중립시그널</p>
                         <p>2. 우축: 금요일 기준 시그널 발생 이후 1주간(월~월)의 실제 금리 등락폭</p>
-                        <p>3. 주황색 영역과 남색 막대의 부호가 같으면 방향이 적중했음을 의미</p>
+                        <p>3. 주황색 영역과 남색 막대의 부호가 같으면(주황색 영역 위에 남색 막대가 있으면) 방향이 적중했음을 의미</p>
                         <p>4. 우측 테이블의 가장 하단값은 이번 주의 시그널(Actual값 없음)</p>
                     </div>
                     """
@@ -1497,6 +1591,49 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
+            st.subheader("Duration Mdoel3(Tree) - Monthly")
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                chart_sig = dfm.tail(36)
+                fig3 = make_subplots(specs=[[{"secondary_y": True}]])
+
+                fig3.add_trace(
+                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Duration_Monthly'], name='Dur_Tree',
+                           marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
+                    secondary_y=False,
+                )
+                fig3.add_trace(
+                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Chg_Dur'], name='Chg_Dur',
+                           marker=dict(color='rgb(13, 45, 79)', opacity=1, line=dict(width=0))),
+                    secondary_y=True,
+                )
+                fig3.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
+                fig3.update_yaxes(range=[-1, 1], secondary_y=True)
+                fig3.update_layout(
+                    title_text="Duration Model3(Tree) - Monthly",
+                    xaxis_title="Date",
+                    yaxis_title="Dur_Tree",
+                    yaxis2_title="Chg_Dur",
+                    template='plotly_dark',
+                    barmode='overlay',
+                    bargap=0,
+                    bargroupgap=0,
+                    legend=dict(
+                        orientation='h',
+                        yanchor='top',
+                        y=1.1,
+                        xanchor='center',
+                        x=0.5
+                    )
+                )
+                st.plotly_chart(fig3, use_container_width=True)
+            with col2:
+                recent_sig = dfm[['DATE', 'Duration_Monthly', 'Act_Direc_Dur', 'Chg_Dur']].tail(10)
+                html = recent_sig.to_html(index=False, border=0)
+                last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
+                html = last_row_style + html
+                st.markdown(html, unsafe_allow_html=True)
+
         elif selected_sub_menu == "USIG스프레드":
             dfw = pd.read_excel(model_path, sheet_name='Week')
             dfm = pd.read_excel(model_path, sheet_name='Month')
@@ -1513,7 +1650,7 @@ if authentication_status:
                     <div class="custom-text">
                         <p>1. 좌축: 주황색 영역이 +/- 이면, 스프레드 축소/확대 시그널이며, 없으면 중립시그널</p>
                         <p>2. 우축: 금요일 기준 시그널 발생 이후 1주간(월~월)의 실제 스프레드 등락폭</p>
-                        <p>3. 주황색 영역과 남색 막대의 부호가 같으면 방향이 적중했음을 의미</p>
+                        <p>3. 주황색 영역과 남색 막대의 부호가 같으면(주황색 영역 위에 남색 막대가 있으면) 방향이 적중했음을 의미</p>
                         <p>4. 우측 테이블의 가장 하단값은 이번 주의 시그널(Actual값 없음)</p>
                     </div>
                     """
@@ -1606,6 +1743,49 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
+            st.subheader("Credit Model3 - Monthly")
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                chart_sig = dfm.tail(36)
+                fig3 = make_subplots(specs=[[{"secondary_y": True}]])
+
+                fig3.add_trace(
+                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Credit_Monthly'], name='Credit_Monthly',
+                           marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
+                    secondary_y=False,
+                )
+                fig3.add_trace(
+                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Chg_Credit'], name='Chg_Credit',
+                           marker=dict(color='rgb(13, 45, 79)', opacity=1, line=dict(width=0))),
+                    secondary_y=True,
+                )
+                fig3.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
+                fig3.update_yaxes(range=[-0.5, 0.5], secondary_y=True)
+                fig3.update_layout(
+                    title_text="Credit Model3 - Monthly",
+                    xaxis_title="Date",
+                    yaxis_title="Credit_Monthly",
+                    yaxis2_title="Chg_Credit",
+                    template='plotly_dark',
+                    barmode='overlay',
+                    bargap=0,
+                    bargroupgap=0,
+                    legend=dict(
+                        orientation='h',
+                        yanchor='top',
+                        y=1.1,
+                        xanchor='center',
+                        x=0.5
+                    )
+                )
+                st.plotly_chart(fig3, use_container_width=True)
+            with col2:
+                recent_sig = dfm[['DATE', 'Credit_Monthly', 'Act_Direc_Credit', 'Chg_Credit']].tail(10)
+                html = recent_sig.to_html(index=False, border=0)
+                last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
+                html = last_row_style + html
+                st.markdown(html, unsafe_allow_html=True)
+
         elif selected_sub_menu == "USIG 추천종목":
             st.title("USIG 종목 Picking")
 
@@ -1667,6 +1847,7 @@ if authentication_status:
 
         elif selected_sub_menu == "FX":
             st.title("FX Strategy by Transformer")
+            st.write("!! 2024.08.26일. USDKRW의 USD 강세모델에서 USD 강세 시그널 발생 !!")
 
             def fxgenfig1(xrange, fxnm, selprob, chart_title, df_path=fx_path):
                 df = pd.read_excel(df_path, sheet_name='fx', usecols=xrange, skiprows=0)
@@ -1677,7 +1858,10 @@ if authentication_status:
 
                 fdf.set_index('DATE', inplace=True)
                 all_dates = pd.date_range(start=fdf.index.min(), end=fdf.index.max(), freq='D')
-                fdf = fdf.reindex(all_dates).ffill()
+                fdf = fdf.reindex(all_dates, method='pad')
+                # all_dates = pd.date_range(start=fdf.index.min(), end=fdf.index.max(), freq='D')
+                # missing_dates = all_dates.difference(fdf.index)
+                # fdf = fdf.reindex(fdf.index.union(missing_dates)).sort_index().ffill()
 
                 fig1 = go.Figure()
                 fig1.add_trace(go.Bar(
@@ -1720,7 +1904,7 @@ if authentication_status:
                         orientation='h',
                         yanchor='top',
                         y=1.1,
-                        xanchor='center',  # 범례의 x축 앵커를 가운데로
+                        xanchor='center',
                         x=0.5
                     )
                 )
@@ -1746,7 +1930,7 @@ if authentication_status:
                         orientation='h',
                         yanchor='top',
                         y=1.1,
-                        xanchor='center',  # 범례의 x축 앵커를 가운데로
+                        xanchor='center',
                         x=0.5
                     )
                 )
@@ -1762,7 +1946,8 @@ if authentication_status:
 
                 fdf.set_index('DATE', inplace=True)
                 all_dates = pd.date_range(start=fdf.index.min(), end=fdf.index.max(), freq='D')
-                fdf = fdf.reindex(all_dates).ffill()
+                fdf = fdf.reindex(all_dates, method='pad')
+                #fdf = fdf.reindex(all_dates).ffill()
 
                 fig1 = go.Figure()
                 fig1.add_trace(go.Bar(
@@ -1805,7 +1990,7 @@ if authentication_status:
                         orientation='h',
                         yanchor='top',
                         y=1.1,
-                        xanchor='center',  # 범례의 x축 앵커를 가운데로
+                        xanchor='center',
                         x=0.5
                     )
                 )
@@ -1815,7 +2000,7 @@ if authentication_status:
             fig_USDKRW1, fig_USDKRW2 = fxgenfig1('B:I', 'USDKRW', 'Prob1', 'USDKRW: USD 강세 모델')
             fig_KRWUSD1, fig_KRWUSD2 = fxgenfig1('O:V', 'USDKRW', 'Prob0', 'USDKRW: KRW 강세 모델')
             fig_USDEUR1 = fxgenfig2('AJ:AO', 'USDEUR', 'USDEUR')
-            fig_USDGBP1 = fxgenfig2('AQ:AV', 'USDGBP', 'EURUSD')
+            fig_USDGBP1 = fxgenfig2('AQ:AV', 'USDGBP', 'USDGBP')
             fig_USDCNY1 = fxgenfig2('AX:BC', 'USDCNY', 'USDCNY')
             fig_USDJPY1 = fxgenfig2('BE:BJ', 'USDJPY', 'USDJPY')
 
@@ -1837,24 +2022,282 @@ if authentication_status:
 
         elif selected_sub_menu == "Allocation":
             st.title("Allocation Model Output")
+            st.write("")
+
+            html = """
+                    <style>
+                        .custom-text {
+                            line-height: 1.2;
+                        }
+                    </style>
+                    <div class="custom-text">
+                        <p>막대그래프는 과거 3개월의 우선순위와 실제성과</p>
+                        <p>따라서, 막대그래프가 우하향하는 경향이 강할수록 과거의 순위 예측이 적중했음을 의미</p>                        
+                    </div>
+                    """
+            st.markdown(html, unsafe_allow_html=True)
 
             st.write("")
-            st.subheader("I. Golbal Agg: US vs. Non-US")
+            st.subheader("I. Golbal Agg: Region")
             st.write("")
-            df = pd.read_excel(allo_path, sheet_name='USIGSector')
 
+            df = pd.read_excel(allo_path, sheet_name='GAgg1')
+            dates = df['DATE'].unique()[::-1]
+
+            sel_latest = df[df['DATE'] == dates[0]]
+            sel_latest['DATE'] = pd.to_datetime(sel_latest['DATE'])
+            date_maxsel = sel_latest['DATE'].iloc[0]
+            formatted_date = date_maxsel.strftime('%Y.%m')
+
+            labelsl = [sel_latest.iloc[0]['Label01'], sel_latest.iloc[0]['Label02'], sel_latest.iloc[0]['Label03'],
+                       sel_latest.iloc[0]['Label04'], sel_latest.iloc[0]['Label05'], sel_latest.iloc[0]['Label06']]
+            probl = [sel_latest.iloc[0]['Fret01'], sel_latest.iloc[0]['Fret02'], sel_latest.iloc[0]['Fret03'],
+                     sel_latest.iloc[0]['Fret04'], sel_latest.iloc[0]['Fret05'], sel_latest.iloc[0]['Fret06']]
+            labels_df = pd.DataFrame({
+                'Rank': labelsl, 'Score': probl
+            })
+            labels_df = labels_df.style.format({
+                'Score': lambda x: f"{x:.2f}"
+            })
+
+            dates = dates[1:4]
+
+
+            def getbardt(df, dtrow):
+                sel_df = df[df['DATE'] == dates[dtrow]]
+                labels = [sel_df.iloc[0]['Label01'], sel_df.iloc[0]['Label02'], sel_df.iloc[0]['Label03'],
+                          sel_df.iloc[0]['Label04'], sel_df.iloc[0]['Label05'], sel_df.iloc[0]['Label06']]
+                values = [sel_df.iloc[0]['Fret01'], sel_df.iloc[0]['Fret02'], sel_df.iloc[0]['Fret03'],
+                          sel_df.iloc[0]['Fret04'], sel_df.iloc[0]['Fret05'], sel_df.iloc[0]['Fret06']]
+                fig = go.Figure(data=[
+                    go.Bar(
+                        x=labels,
+                        y=values,
+                        marker_color=['blue', 'blue', 'blue', 'blue', 'blue', 'blue']
+                    )
+                ])
+                fig.update_layout(
+                    title=f"{dates[dtrow]}",
+                    xaxis_title="추천순위",
+                    yaxis_title="실제성과",
+                )
+                fig.update_yaxes(range=[min(values) - (0.1 * min(values)), max(values) + (0.1 * max(values))])
+                return fig
+
+
+            fig1 = getbardt(df, 0)
+            fig2 = getbardt(df, 1)
+            fig3 = getbardt(df, 2)
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.write("")
+                st.subheader(f"{formatted_date}월의 순위 예측")
+                st.write("")
+                st.dataframe(labels_df, use_container_width=True, hide_index=True)
+            with col2:
+                st.plotly_chart(fig1)
+            with col3:
+                st.plotly_chart(fig2)
+            with col4:
+                st.plotly_chart(fig3)
+
+            st.write("")
             st.subheader("II. Golbal Agg: US Sector")
             st.write("")
-            df = pd.read_excel(allo_path, sheet_name='USIGSector')
 
-            st.subheader("III. Golbal Agg: US Treasury")
+            df = pd.read_excel(allo_path, sheet_name='GAgg2')
+            dates = df['DATE'].unique()[::-1]
+
+            sel_latest = df[df['DATE'] == dates[0]]
+            sel_latest['DATE'] = pd.to_datetime(sel_latest['DATE'])
+            date_maxsel = sel_latest['DATE'].iloc[0]
+            formatted_date = date_maxsel.strftime('%Y.%m')
+
+            labelsl = [sel_latest.iloc[0]['Label01'], sel_latest.iloc[0]['Label02'], sel_latest.iloc[0]['Label03']]
+            probl = [sel_latest.iloc[0]['Fret01'], sel_latest.iloc[0]['Fret02'], sel_latest.iloc[0]['Fret03']]
+            labels_df = pd.DataFrame({
+                'Rank': labelsl, 'Score': probl
+            })
+            labels_df = labels_df.style.format({
+                'Score': lambda x: f"{x:.2f}"
+            })
+
+            dates = dates[1:4]
+
+
+            def getbardt(df, dtrow):
+                sel_df = df[df['DATE'] == dates[dtrow]]
+                labels = [sel_df.iloc[0]['Label01'], sel_df.iloc[0]['Label02'], sel_df.iloc[0]['Label03']]
+                values = [sel_df.iloc[0]['Fret01'], sel_df.iloc[0]['Fret02'], sel_df.iloc[0]['Fret03']]
+                fig = go.Figure(data=[
+                    go.Bar(
+                        x=labels,
+                        y=values,
+                        marker_color=['blue', 'blue', 'blue']
+                    )
+                ])
+                fig.update_layout(
+                    title=f"{dates[dtrow]}",
+                    xaxis_title="추천순위",
+                    yaxis_title="실제성과",
+                )
+                fig.update_yaxes(range=[min(values) - (0.1 * min(values)), max(values) + (0.1 * max(values))])
+                return fig
+
+
+            fig1 = getbardt(df, 0)
+            fig2 = getbardt(df, 1)
+            fig3 = getbardt(df, 2)
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.write("")
+                st.subheader(f"{formatted_date}월의 순위 예측")
+                st.write("")
+                st.dataframe(labels_df, use_container_width=True, hide_index=True)
+            with col2:
+                st.plotly_chart(fig1)
+            with col3:
+                st.plotly_chart(fig2)
+            with col4:
+                st.plotly_chart(fig3)
+
             st.write("")
-            df = pd.read_excel(allo_path, sheet_name='USIGSector')
-
-            st.subheader("IV. Golbal Agg: US Corporate")
+            st.subheader("III. Golbal Agg: US Corporate")
             st.write("")
-            df = pd.read_excel(allo_path, sheet_name='USIGSector')
 
+            df = pd.read_excel(allo_path, sheet_name='GAgg3')
+            dates = df['DATE'].unique()[::-1]
+
+            sel_latest = df[df['DATE'] == dates[0]]
+            sel_latest['DATE'] = pd.to_datetime(sel_latest['DATE'])
+            date_maxsel = sel_latest['DATE'].iloc[0]
+            formatted_date = date_maxsel.strftime('%Y.%m')
+
+            labelsl = [sel_latest.iloc[0]['Label01'], sel_latest.iloc[0]['Label02'], sel_latest.iloc[0]['Label03'],
+                       sel_latest.iloc[0]['Label04'], sel_latest.iloc[0]['Label05'], sel_latest.iloc[0]['Label06']]
+            probl = [sel_latest.iloc[0]['Fret01'], sel_latest.iloc[0]['Fret02'], sel_latest.iloc[0]['Fret03'],
+                     sel_latest.iloc[0]['Fret04'], sel_latest.iloc[0]['Fret05'], sel_latest.iloc[0]['Fret06']]
+            labels_df = pd.DataFrame({
+                'Rank': labelsl, 'Score': probl
+            })
+            labels_df = labels_df.style.format({
+                'Score': lambda x: f"{x:.2f}"
+            })
+
+            dates = dates[1:4]
+
+
+            def getbardt(df, dtrow):
+                sel_df = df[df['DATE'] == dates[dtrow]]
+                labels = [sel_df.iloc[0]['Label01'], sel_df.iloc[0]['Label02'], sel_df.iloc[0]['Label03'],
+                          sel_df.iloc[0]['Label04'], sel_df.iloc[0]['Label05'], sel_df.iloc[0]['Label06']]
+                values = [sel_df.iloc[0]['Fret01'], sel_df.iloc[0]['Fret02'], sel_df.iloc[0]['Fret03'],
+                          sel_df.iloc[0]['Fret04'], sel_df.iloc[0]['Fret05'], sel_df.iloc[0]['Fret06']]
+                fig = go.Figure(data=[
+                    go.Bar(
+                        x=labels,
+                        y=values,
+                        marker_color=['blue', 'blue', 'blue', 'blue', 'blue', 'blue']
+                    )
+                ])
+                fig.update_layout(
+                    title=f"{dates[dtrow]}",
+                    xaxis_title="추천순위",
+                    yaxis_title="실제성과",
+                )
+                fig.update_yaxes(range=[min(values) - (0.1 * min(values)), max(values) + (0.1 * max(values))])
+                return fig
+
+
+            fig1 = getbardt(df, 0)
+            fig2 = getbardt(df, 1)
+            fig3 = getbardt(df, 2)
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.write("")
+                st.subheader(f"{formatted_date}월의 순위 예측")
+                st.write("")
+                st.dataframe(labels_df, use_container_width=True, hide_index=True)
+            with col2:
+                st.plotly_chart(fig1)
+            with col3:
+                st.plotly_chart(fig2)
+            with col4:
+                st.plotly_chart(fig3)
+
+            st.write("")
+            st.subheader("IV. Golbal Agg: US Treasury")
+            st.write("")
+
+            df = pd.read_excel(allo_path, sheet_name='GAgg4')
+            dates = df['DATE'].unique()[::-1]
+
+            sel_latest = df[df['DATE'] == dates[0]]
+            sel_latest['DATE'] = pd.to_datetime(sel_latest['DATE'])
+            date_maxsel = sel_latest['DATE'].iloc[0]
+            formatted_date = date_maxsel.strftime('%Y.%m')
+
+            labelsl = [sel_latest.iloc[0]['Label01'], sel_latest.iloc[0]['Label02'], sel_latest.iloc[0]['Label03'],
+                       sel_latest.iloc[0]['Label04'], sel_latest.iloc[0]['Label05'], sel_latest.iloc[0]['Label06'],
+                       sel_latest.iloc[0]['Label07']]
+            probl = [sel_latest.iloc[0]['Fret01'], sel_latest.iloc[0]['Fret02'], sel_latest.iloc[0]['Fret03'],
+                     sel_latest.iloc[0]['Fret04'], sel_latest.iloc[0]['Fret05'], sel_latest.iloc[0]['Fret06'],
+                     sel_latest.iloc[0]['Fret07']]
+            labels_df = pd.DataFrame({
+                'Rank': labelsl, 'Score': probl
+            })
+            labels_df = labels_df.style.format({
+                'Score': lambda x: f"{x:.2f}"
+            })
+
+            dates = dates[1:4]
+
+
+            def getbardt(df, dtrow):
+                sel_df = df[df['DATE'] == dates[dtrow]]
+                labels = [sel_df.iloc[0]['Label01'], sel_df.iloc[0]['Label02'], sel_df.iloc[0]['Label03'],
+                          sel_df.iloc[0]['Label04'], sel_df.iloc[0]['Label05'], sel_df.iloc[0]['Label06'],
+                          sel_df.iloc[0]['Label07']]
+                values = [sel_df.iloc[0]['Fret01'], sel_df.iloc[0]['Fret02'], sel_df.iloc[0]['Fret03'],
+                          sel_df.iloc[0]['Fret04'], sel_df.iloc[0]['Fret05'], sel_df.iloc[0]['Fret06'],
+                          sel_df.iloc[0]['Fret07']]
+                fig = go.Figure(data=[
+                    go.Bar(
+                        x=labels,
+                        y=values,
+                        marker_color=['blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue']
+                    )
+                ])
+                fig.update_layout(
+                    title=f"{dates[dtrow]}",
+                    xaxis_title="추천순위",
+                    yaxis_title="실제성과",
+                )
+                fig.update_yaxes(range=[min(values) - (0.1 * min(values)), max(values) + (0.1 * max(values))])
+                return fig
+
+
+            fig1 = getbardt(df, 0)
+            fig2 = getbardt(df, 1)
+            fig3 = getbardt(df, 2)
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.write("")
+                st.subheader(f"{formatted_date}월의 순위 예측")
+                st.write("")
+                st.dataframe(labels_df, use_container_width=True, hide_index=True)
+            with col2:
+                st.plotly_chart(fig1)
+            with col3:
+                st.plotly_chart(fig2)
+            with col4:
+                st.plotly_chart(fig3)
+
+            st.write("")
             st.subheader("V. USIG Sector Allocation")
             st.write("")
 
