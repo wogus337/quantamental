@@ -234,7 +234,8 @@ if authentication_status:
 
     st.sidebar.image(image_path, use_column_width=True, output_format='PNG')
     st.sidebar.write("")
-    st.sidebar.title("QIS")
+    st.sidebar.markdown("<h1 style='font-size: 35px; font-weight: bold;'>QIS Square</h1>", unsafe_allow_html=True)
+
     # main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "Allocation", "시나리오"]
     main_menu_options = ["Market", "Relative", "국면", "유사국면", "Macro 분석", "모델전망 & Signal"]
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
