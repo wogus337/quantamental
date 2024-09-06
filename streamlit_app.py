@@ -1540,6 +1540,16 @@ if authentication_status:
             choices = [1, 0, -1]
             dfds['Diff'] = np.select(cond, choices)
 
+            dfds['Prev_Actual'] = dfds['Actual'].shift(1)
+            cond2 = [
+                (dfds['Actual'] > dfds['Prev_Actual']),
+                (dfds['Actual'] == dfds['Prev_Actual']),
+                (dfds['Actual'] < dfds['Prev_Actual'])
+            ]
+            choices2 = [1, 0, -1]
+            dfds['Actual_Direc'] = np.select(cond2, choices2, default=np.nan)
+            dfds.drop(columns=['Prev_Actual'], inplace=True)
+
             df_s = dfseriesx
             df_s = df_s.groupby(df_s['DATE'].dt.to_period('M')).last().reset_index(drop=True)
             df_s['DATE'] = df_s['DATE'].dt.to_period('M').dt.to_timestamp(how='end').dt.normalize()
@@ -1578,6 +1588,12 @@ if authentication_status:
 
             #chart_bar = dfdsbar.tail(36)
             chart_bar = dfdsbar.copy()
+
+            count_hit1 = ((chart_bar['Diff'] * chart_bar['tgtchg']) > 0).sum() / (chart_bar['Diff'] != 0).sum()
+            count_hit2 = ((chart_bar['Actual_Direc'] * chart_bar['tgtchg']) > 0).sum() / (chart_bar['Actual_Direc'] != 0).sum()
+            hit1 = f"{count_hit1 * 100:.1f}%"
+            hit2 = f"{count_hit2 * 100:.1f}%"
+
             if abs(dfdsbar['tgtchg'].min()) > abs(dfdsbar['tgtchg'].max()):
                 y_min = dfdsbar['tgtchg'].min() - dfdsbar['tgtchg'].min() * 0.1
                 y_max = abs(dfdsbar['tgtchg'].min()) + dfdsbar['tgtchg'].min() * 0.1
@@ -1599,7 +1615,36 @@ if authentication_status:
             fig2.update_yaxes(title_text="Actual > Survey: 1, else -1", secondary_y=False, range=[-1, 1])
             fig2.update_yaxes(title_text="chg.tgtchg", secondary_y=True, range=[y_min, y_max])
             fig2.update_layout(
-                title_text="Actual vs. Survey",
+                title_text=f"Actual vs. Survey: Hit({hit1})",
+                xaxis_title="Date",
+                template='plotly_dark',
+                barmode='overlay',
+                bargap=0,
+                bargroupgap=0,
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',
+                    x=0.5
+                )
+            )
+
+            fig3 = make_subplots(specs=[[{"secondary_y": True}]])
+            fig3.add_trace(
+                go.Bar(x=chart_bar['DATE'], y=chart_bar['Actual_Direc'], name='Actual_Direc',
+                       marker=dict(color='rgb(13, 45, 79)', opacity=1, line=dict(width=0))),
+                secondary_y=False,
+            )
+            fig3.add_trace(
+                go.Bar(x=chart_bar['DATE'], y=chart_bar['tgtchg'], name=f"chg.{seltgt}",
+                       marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
+                secondary_y=True,
+            )
+            fig3.update_yaxes(title_text="Actual +: 1, else -1", secondary_y=False, range=[-1, 1])
+            fig3.update_yaxes(title_text="chg.tgtchg", secondary_y=True, range=[y_min, y_max])
+            fig3.update_layout(
+                title_text=f"[cf]Actual: Hit({hit2})",
                 xaxis_title="Date",
                 template='plotly_dark',
                 barmode='overlay',
@@ -1632,8 +1677,22 @@ if authentication_status:
                                     </div>
                                     """
                 st.markdown(html, unsafe_allow_html=True)
-
                 st.plotly_chart(fig2)
+
+                st.write("")
+                html = """
+                                                    <style>
+                                                        .custom-text {
+                                                            line-height: 1.2; /* 행간을 줄이는 CSS 속성 */
+                                                        }
+                                                    </style>
+                                                    <div class="custom-text">
+                                                        <p>비교를 위해 실제 지표의 등락과 Target 지표의 방향일치성 확인</p>
+                                                        <p>남색 막대 위에 주황색 막대가 있다면, 실제치가 상승했을 때, Target 지표가 상승했음을 의미</p>                                    
+                                                    </div>
+                                                    """
+                st.markdown(html, unsafe_allow_html=True)
+                st.plotly_chart(fig3)
 
     elif selected_main_menu == "모델전망 & Signal":
         if selected_sub_menu == "금리":
