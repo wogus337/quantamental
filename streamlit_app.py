@@ -18,29 +18,31 @@ from statsmodels.stats.stattools import durbin_watson
 from sklearn.linear_model import LinearRegression
 
 
-series_path = "data/streamlit_24.xlsx"
-cylfile_path = "data/streamlit_24_cycle.xlsx"
-simfile_path = "data/streamlit_24_sim.xlsx"
-fx_path = "data/streamlit_24_fx.xlsx"
-model_path = "data/streamlit_24_signal.xlsx"
-macro_path = "data/streamlit_24_macro.xlsx"
-usig_path = "data/streamlit_24_usigpick.xlsx"
-market_path = "data/streamlit_24_marketVV.xlsx"
-allo_path = "data/streamlit_24_allocation.xlsx"
-image_path = "images/miraeasset.png"
-igimage_path = "images/usig.png"
+# series_path = "data/streamlit_24.xlsx"
+# cylfile_path = "data/streamlit_24_cycle.xlsx"
+# simfile_path = "data/streamlit_24_sim.xlsx"
+# fx_path = "data/streamlit_24_fx.xlsx"
+# model_path = "data/streamlit_24_signal.xlsx"
+# macro_path = "data/streamlit_24_macro.xlsx"
+# usig_path = "data/streamlit_24_usigpick.xlsx"
+# market_path = "data/streamlit_24_marketVV.xlsx"
+# allo_path = "data/streamlit_24_allocation.xlsx"
+# fds_path = "data/streamlit_24_fds.xlsx"
+# image_path = "images/miraeasset.png"
+# igimage_path = "images/usig.png"
 #
-# series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
-# cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
-# simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
-# fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
-# model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
-# macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
-# usig_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_usigpick.xlsx"
-# market_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_marketVV.xlsx"
-# allo_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_allocation.xlsx"
-# image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
-# igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
+series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
+cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
+simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
+fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
+model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
+macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
+usig_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_usigpick.xlsx"
+market_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_marketVV.xlsx"
+allo_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_allocation.xlsx"
+fds_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fds.xlsx"
+image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
+igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
 
 
 def get_closest_business_day(date, df):
@@ -250,10 +252,10 @@ if authentication_status:
         sub_menu_options = ["유사국면분석"]
 
     elif selected_main_menu == "Macro 분석":
-        sub_menu_options = ["Macro Driver"]
+        sub_menu_options = ["Macro Driver", "Macro: Actual vs. Survey"]
 
     elif selected_main_menu == "모델전망 & Signal":
-        sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "Allocation", "FX"]
+        sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "RankingModel", "FX", "FDS"]
 
     selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 
@@ -316,7 +318,6 @@ if authentication_status:
 
             sel_cate = st.selectbox("Category",
                                     ['All', 'Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy'])
-
 
             def plot_ts(df, sel_colx, selecpr):
                 edate = df['DATE'].max()
@@ -1480,6 +1481,160 @@ if authentication_status:
             st.subheader("Monthly")
             st.table(resreg_m)
 
+        elif selected_sub_menu == "Macro: Actual vs. Survey":
+
+            st.title("Actual vs. Survey")
+            st.write("")
+
+            df1 = pd.read_excel(market_path, sheet_name="G10Y")
+            df2 = pd.read_excel(market_path, sheet_name="OAS")
+            df3 = pd.read_excel(market_path, sheet_name="FX")
+            df4 = pd.read_excel(market_path, sheet_name="StockIndex")
+            df5 = pd.read_excel(market_path, sheet_name="SPXsector")
+            # df6 = pd.read_excel(market_path, sheet_name="SPGSCI")
+            # df7 = pd.read_excel(market_path, sheet_name="Energy")
+            dfs = [df1, df2, df3, df4, df5]
+            dfseries = reduce(lambda left, right: pd.merge(left, right, on='DATE', how='outer'), dfs)
+            columns = [col for col in dfseries.columns if col != 'DATE']
+
+            dfmeta = pd.read_excel(macro_path, sheet_name='META')
+            dfm = pd.read_excel(macro_path, sheet_name='MONTHLYV', skiprows=1)
+            dfms = pd.read_excel(macro_path, sheet_name='MSURVEYV', skiprows=1)
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                selyr = st.number_input('StartFrom', value=2015)
+            with col2:
+                inputlag = st.number_input('Lag', value=1)
+            with col3:
+                seltgt = st.selectbox("Target", columns)
+
+            dfseriesx = dfseries[['DATE', seltgt]]
+
+            meta_m = dfmeta[dfmeta['Period'] == 'Monthly']
+            meta_m = meta_m[meta_m['Surv'] == 'O']
+
+            selm = meta_m['Name'].tolist()
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                selmacro = st.selectbox('지표를 선택해주세요.:', selm)
+
+            num1 = int(meta_m[meta_m['Name'] == selmacro]['COL1']) - 1
+            num2 = int(meta_m[meta_m['Name'] == selmacro]['COL2']) - 1
+
+            dfd_x = dfm.iloc[:, num1:num2 + 1].dropna()
+            dfs_x = dfms.iloc[:, num1:num2 + 1].dropna()
+
+            dfd_x.rename(columns={dfd_x.columns[0]: 'DATE', dfd_x.columns[1]: 'Actual'}, inplace=True)
+            dfs_x.rename(columns={dfs_x.columns[0]: 'DATE', dfs_x.columns[1]: 'Survey'}, inplace=True)
+            dfd_x = dfd_x.groupby(dfd_x['DATE'].dt.to_period('M')).last().reset_index(drop=True)
+            dfd_x['DATE'] = dfd_x['DATE'].dt.to_period('M').dt.to_timestamp(how='end').dt.normalize()
+            dfs_x = dfs_x.groupby(dfs_x['DATE'].dt.to_period('M')).last().reset_index(drop=True)
+            dfs_x['DATE'] = dfs_x['DATE'].dt.to_period('M').dt.to_timestamp(how='end').dt.normalize()
+            dfds = pd.merge(dfd_x, dfs_x, on='DATE', how='right')
+            cond = [
+                (dfds['Actual'] > dfds['Survey']),
+                (dfds['Actual'] == dfds['Survey']),
+                (dfds['Actual'] < dfds['Survey'])
+            ]
+            choices = [1, 0, -1]
+            dfds['Diff'] = np.select(cond, choices)
+
+            df_s = dfseriesx
+            df_s = df_s.groupby(df_s['DATE'].dt.to_period('M')).last().reset_index(drop=True)
+            df_s['DATE'] = df_s['DATE'].dt.to_period('M').dt.to_timestamp(how='end').dt.normalize()
+            df_s[f"{seltgt}_chg"] = df_s[seltgt].diff()
+            dfds = pd.merge(dfds, df_s, on='DATE', how='outer')
+            xlag = inputlag * -1
+            dfds['tgt'] = dfds.iloc[:, -2].shift(xlag)
+            dfds['tgtchg'] = dfds.iloc[:, -2].shift(xlag) # tgt가 생기니까 -2
+            dfds = dfds[dfds['DATE'].dt.year >= selyr]
+
+            last_row = dfds.iloc[[-1]]
+            df_dropped = dfds.iloc[:-1].dropna()
+            dfdsline = pd.concat([df_dropped, last_row], ignore_index=True)
+            dfdsbar = dfds.dropna()
+
+            fig1 = make_subplots(specs=[[{"secondary_y": True}]])
+            fig1.add_trace(
+                go.Scatter(x=dfdsline['DATE'], y=dfdsline['Actual'], mode='lines', name='Actual'),
+                secondary_y=False
+            )
+            fig1.add_trace(
+                go.Scatter(x=dfdsline['DATE'], y=dfdsline['Survey'], mode='lines', name='Survey'),
+                secondary_y=False
+            )
+            fig1.add_trace(
+                go.Scatter(x=dfdsline['DATE'], y=dfdsline['tgt'], mode='lines', name=seltgt, line=dict(dash='solid')),
+                secondary_y=True
+            )
+            fig1.update_layout(
+                title_text="Actual vs. Survey",
+                xaxis_title="Date",
+                yaxis_title="value",
+                yaxis2_title=seltgt,
+                template='plotly_dark'
+            )
+
+            #chart_bar = dfdsbar.tail(36)
+            chart_bar = dfdsbar.copy()
+            if abs(dfdsbar['tgtchg'].min()) > abs(dfdsbar['tgtchg'].max()):
+                y_min = dfdsbar['tgtchg'].min() - dfdsbar['tgtchg'].min() * 0.1
+                y_max = abs(dfdsbar['tgtchg'].min()) + dfdsbar['tgtchg'].min() * 0.1
+            else:
+                y_min = dfdsbar['tgtchg'].max() * -1 - dfdsbar['tgtchg'].max() * 0.1
+                y_max = dfdsbar['tgtchg'].max() + dfdsbar['tgtchg'].max() * 0.1
+
+            fig2 = make_subplots(specs=[[{"secondary_y": True}]])
+            fig2.add_trace(
+                go.Bar(x=chart_bar['DATE'], y=chart_bar['Diff'], name='Actual - Survey',
+                       marker=dict(color='rgb(13, 45, 79)', opacity=1, line=dict(width=0))),
+                secondary_y=False,
+            )
+            fig2.add_trace(
+                go.Bar(x=chart_bar['DATE'], y=chart_bar['tgtchg'], name=f"chg.{seltgt}",
+                       marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
+                secondary_y=True,
+            )
+            fig2.update_yaxes(title_text="Actual > Survey: 1, else -1", secondary_y=False, range=[-1, 1])
+            fig2.update_yaxes(title_text="chg.tgtchg", secondary_y=True, range=[y_min, y_max])
+            fig2.update_layout(
+                title_text="Actual vs. Survey",
+                xaxis_title="Date",
+                template='plotly_dark',
+                barmode='overlay',
+                bargap=0,
+                bargroupgap=0,
+                legend=dict(
+                    orientation='h',
+                    yanchor='top',
+                    y=1.1,
+                    xanchor='center',
+                    x=0.5
+                )
+            )
+
+            col1, col2 = st.columns([3, 1])
+            with col1:
+
+                st.plotly_chart(fig1)
+
+                st.write("")
+                html = """
+                                    <style>
+                                        .custom-text {
+                                            line-height: 1.2; /* 행간을 줄이는 CSS 속성 */
+                                        }
+                                    </style>
+                                    <div class="custom-text">
+                                        <p>남색 막대가 +에 있으면 실제치>예상치, -에 있으면 실제치<예상치</p>
+                                        <p>남색 막대 위에 주황색 막대가 있다면, 실제치가 예상치를 상회했을 때, Target 지표가 상승했음을 의미</p>                                    
+                                    </div>
+                                    """
+                st.markdown(html, unsafe_allow_html=True)
+
+                st.plotly_chart(fig2)
+
     elif selected_main_menu == "모델전망 & Signal":
         if selected_sub_menu == "금리":
 
@@ -2020,8 +2175,8 @@ if authentication_status:
                 st.plotly_chart(fig_USDGBP1)
                 st.plotly_chart(fig_USDJPY1)
 
-        elif selected_sub_menu == "Allocation":
-            st.title("Allocation Model Output")
+        elif selected_sub_menu == "RankingModel":
+            st.title("Ranking Model Output")
             st.write("")
 
             html = """
@@ -2298,7 +2453,7 @@ if authentication_status:
                 st.plotly_chart(fig3)
 
             st.write("")
-            st.subheader("V. USIG Sector Allocation")
+            st.subheader("V. USIG Sector")
             st.write("")
 
             df = pd.read_excel(allo_path, sheet_name='USIGSector')
@@ -2366,6 +2521,69 @@ if authentication_status:
             with col4:
                 st.plotly_chart(fig3)
 
+        elif selected_sub_menu == "FDS":
+            st.title("FDS Signal monitoring")
+
+            nmcol1 = ['FDS A', 'FDS B', 'FDS C', 'FDS D', 'FDS E', 'FDS F', 'FDS G', 'FDS H']
+            nmcol2 = ['Signal A', 'Signal B', 'Signal C', 'Signal D', 'Signal E', 'Signal F', 'Signal G', 'Signal H']
+            nmcol3 = ['Threshold A', 'Threshold B', 'Threshold C', 'Threshold D', 'Threshold E', 'Threshold F',
+                      'Threshold G', 'Threshold H']
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                selyr = st.number_input('StartFrom', value=2015)
+
+            def fdschart(xnm, selyr=selyr):
+                st.subheader(xnm)
+                df = pd.read_excel(fds_path, sheet_name=xnm)
+                df = df[df['DATE'].dt.year >= selyr]
+                numsig = [col for col in df.columns if col.startswith('FDS')]
+                numsigx = len(numsig)
+                col1x = ['DATE'] + [xnm] + nmcol2[0:numsigx]
+                df = df[col1x]
+
+                fig = make_subplots(specs=[[{"secondary_y": True}]])
+                fig.add_trace(
+                    go.Scatter(x=df['DATE'], y=df[xnm], mode='lines', name=xnm),
+                    secondary_y=False
+                )
+                for col in df.columns[2:]:
+                    fig.add_trace(
+                        go.Bar(x=df['DATE'], y=df[col], name=col),
+                        secondary_y=True
+                    )
+                fig.update_layout(
+                    title_text=f"Fractal Dimension Signal of {xnm}",
+                    xaxis_title='Date',
+                    yaxis_title=xnm,  # 좌측 y축
+                    yaxis2_title="Signal",  # 우측 y축
+                    barmode='overlay',  # 막대 차트가 그룹으로 표시되도록 설정
+                    bargap=0,
+                    bargroupgap=0
+                )
+
+                return fig
+
+            col1, col2 = st.columns(2)
+            with col1:
+                fig_us10y = fdschart("US10Y")
+                st.plotly_chart(fig_us10y)
+            with col2:
+                fig_usig = fdschart("USIGOAS")
+                st.plotly_chart(fig_usig)
+
+            col1, col2 = st.columns(2)
+            with col1:
+                fig_jpy = fdschart("USDJPY")
+                st.plotly_chart(fig_jpy)
+            with col2:
+                fig_krw = fdschart("USDKRW")
+                st.plotly_chart(fig_krw)
+
+            col1, col2 = st.columns(2)
+            with col1:
+                fig_inr = fdschart("INRKRW")
+                st.plotly_chart(fig_inr)
 
     authenticator.logout('Logout', 'sidebar')
 
