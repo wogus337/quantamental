@@ -650,10 +650,10 @@ if authentication_status:
                 st.subheader(f"{sel_cate11}")
                 recent_data1 = fdf[['DATE', sel_cate11]].tail(5)
                 recent_data1.set_index('DATE', inplace=True)
-                st.dataframe(recent_data1, use_container_width=True)
 
                 col1, col2 = st.columns([4, 1])
                 with col1:
+                    st.dataframe(recent_data1, use_container_width=True)
                     fig1 = go.Figure()
                     fig1.add_trace(
                         go.Scatter(x=fdf['DATE'], y=fdf[sel_cate11], name=sel_cate11, mode='lines', line=dict(color='rgb(245, 130, 32)')))
