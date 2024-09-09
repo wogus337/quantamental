@@ -578,7 +578,7 @@ if authentication_status:
         if selected_sub_menu == "Relative(Trend)":
 
             st.title("Relative(Trend)")
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5 = st.columns(5)
 
             with col1:
                 sel_cate1 = st.selectbox("Category1",
