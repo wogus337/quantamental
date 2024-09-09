@@ -677,7 +677,6 @@ if authentication_status:
                         reg_coeff = model.coef_[0]
 
                         st.write("")
-                        st.write("")
                         st.subheader(f"{sel_cate11} & {sel_cate21}")
                         st.write("Correlation:", round(corr, 4))
                         st.write("Regression Coefficient:", round(reg_coeff, 2))
@@ -713,6 +712,7 @@ if authentication_status:
                         st.plotly_chart(fig2, use_container_width=True)
 
                     with col2:
+
                         selectr = st.radio("Relative:",
                                            ["Spread", "Ratio"]
                                            )
