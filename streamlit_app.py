@@ -636,12 +636,12 @@ if authentication_status:
                 with col1:
                     sdate = dfx1['DATE'].min().strftime('%Y/%m/%d')
                     edate = dfx1['DATE'].max().strftime('%Y/%m/%d')
-                    st.header(f"Date: {sdate} ~ {edate}")
+                    st.subheader(f"Date: {sdate} ~ {edate}")
                     start_date = st.date_input("Start", min_value=dfx1['DATE'].min(), max_value=dfx1['DATE'].max(),
                                                value=dfx1['DATE'].min())
                     st.write("")
                 with col2:
-                    st.header("")
+                    st.subheader("")
                     end_date = st.date_input("End", min_value=dfx1['DATE'].min(), max_value=dfx1['DATE'].max(),
                                              value=dfx1['DATE'].max())
                     st.write("")
