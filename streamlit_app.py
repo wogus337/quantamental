@@ -652,21 +652,21 @@ if authentication_status:
                 recent_data1.set_index('DATE', inplace=True)
                 st.dataframe(recent_data1, use_container_width=True)
 
-                fig1 = go.Figure()
-                fig1.add_trace(
-                    go.Scatter(x=fdf['DATE'], y=fdf[sel_cate11], name=sel_cate11, mode='lines', line=dict(color='rgb(245, 130, 32)')))
-                fig1.update_layout(
-                    xaxis_title='Date',
-                    yaxis_title=sel_cate11,
-                    template='plotly_dark'
-                )
-
-                st.plotly_chart(fig1, use_container_width=True)
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    fig1 = go.Figure()
+                    fig1.add_trace(
+                        go.Scatter(x=fdf['DATE'], y=fdf[sel_cate11], name=sel_cate11, mode='lines', line=dict(color='rgb(245, 130, 32)')))
+                    fig1.update_layout(
+                        xaxis_title='Date',
+                        yaxis_title=sel_cate11,
+                        template='plotly_dark'
+                    )
+                    st.plotly_chart(fig1, use_container_width=True)
 
                 if sel_cate21 != '선택 없음' and sel_cate11 != sel_cate21:
-
+                    col1, col2, col3 = st.columns([2, 2, 1])
                     with col1:
-
                         fdf = pd.merge(dfx1, dfx2, on='DATE', how='inner')
                         corr = fdf[sel_cate11].corr(fdf[sel_cate21])
 
