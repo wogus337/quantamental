@@ -345,7 +345,7 @@ if authentication_status:
                     xdf = fdf[['DATE', col]]
                     xdf = xdf.dropna()
                     fig1 = go.Figure()
-                    fig1.add_trace(go.Scatter(x=xdf['DATE'], y=xdf[col], name=col, mode='lines'))
+                    fig1.add_trace(go.Scatter(x=xdf['DATE'], y=xdf[col], name=col, mode='lines', line=dict(color='rgb(245, 130, 32)')))
                     fig1.update_layout(
                         xaxis_title='Date',
                         yaxis_title=col,
@@ -654,7 +654,7 @@ if authentication_status:
 
                 fig1 = go.Figure()
                 fig1.add_trace(
-                    go.Scatter(x=fdf['DATE'], y=fdf[sel_cate11], name=sel_cate11, mode='lines'))
+                    go.Scatter(x=fdf['DATE'], y=fdf[sel_cate11], name=sel_cate11, mode='lines', line=dict(color='rgb(245, 130, 32)')))
                 fig1.update_layout(
                     xaxis_title='Date',
                     yaxis_title=sel_cate11,
@@ -688,9 +688,9 @@ if authentication_status:
 
                         fig2 = go.Figure()
                         fig2.add_trace(
-                            go.Scatter(x=fdf['DATE'], y=fdf[sel_cate11], name=sel_cate11, mode='lines'))
+                            go.Scatter(x=fdf['DATE'], y=fdf[sel_cate11], name=sel_cate11, mode='lines', line=dict(color='rgb(245, 130, 32)')))
                         fig2.add_trace(
-                            go.Scatter(x=fdf['DATE'], y=fdf[sel_cate21], name=sel_cate21, mode='lines',
+                            go.Scatter(x=fdf['DATE'], y=fdf[sel_cate21], name=sel_cate21, mode='lines', line=dict(color='rgb(13, 45, 79)'),
                                        yaxis='y2'))
 
                         fig2.update_layout(
@@ -1059,65 +1059,67 @@ if authentication_status:
             df_last = df_last[['DATE', selected_column1]]
             fdf = pd.merge(fdf, df_last, on='DATE', how='left')
 
-            fig = go.Figure()
-            for phase in phase_nm:
-                fig.add_trace(go.Bar(
-                    x=fdf['DATE'], y=fdf[phase],
-                    name=f'{phase}',
-                    yaxis='y3',
-                    opacity=0.4,
-                    marker=dict(line=dict(width=0))
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                fig = go.Figure()
+                for phase in phase_nm:
+                    fig.add_trace(go.Bar(
+                        x=fdf['DATE'], y=fdf[phase],
+                        name=f'{phase}',
+                        yaxis='y3',
+                        opacity=0.4,
+                        marker=dict(line=dict(width=0))
+                    ))
+                fig.add_trace(go.Scatter(
+                    x=fdf['DATE'], y=fdf['Economic_Cycle_Indicator'],
+                    mode='lines', name='Economic_Cycle_Indicator',
+                    yaxis='y1',
+                    line=dict(width=4, color='rgb(245, 130, 32)')
                 ))
-            fig.add_trace(go.Scatter(
-                x=fdf['DATE'], y=fdf['Economic_Cycle_Indicator'],
-                mode='lines', name='Economic_Cycle_Indicator',
-                yaxis='y1',
-                line=dict(width=4, color='red')
-            ))
-            fig.add_trace(go.Scatter(
-                x=fdf['DATE'], y=fdf[selected_column1],
-                mode='lines', name=selected_column1,
-                yaxis='y2',
-                line=dict(width=4, color='blue')
-            ))
+                fig.add_trace(go.Scatter(
+                    x=fdf['DATE'], y=fdf[selected_column1],
+                    mode='lines', name=selected_column1,
+                    yaxis='y2',
+                    line=dict(width=4, color='rgb(13, 45, 79)')
+                ))
 
-            fig.update_layout(
-                title='Economic Cycle Indicator and Phases',
-                xaxis=dict(title='DATE'),
-                yaxis=dict(
-                    title='Economic Cycle Indicator',
-                    side='left',
-                    title_standoff=20
-                ),
-                yaxis2=dict(
-                    title=selected_column1,
-                    overlaying='y',
-                    side='left',
-                    anchor='x',
-                    position=0.15,
-                    title_standoff=60
-                ),
-                yaxis3=dict(
-                    title='Phases',
-                    overlaying='y',  # 좌측 y축과 겹치도록 설정
-                    side='right',
-                    anchor='x',
-                    position=0.85
-                ),
-                barmode='overlay',
-                bargap=0,
-                template='plotly_dark',
-                legend=dict(
-                    orientation='h',
-                    yanchor='top',
-                    y=1.1,
-                    xanchor='center',  # 범례의 x축 앵커를 가운데로
-                    x=0.5
-                ),
-                height=800
-            )
+                fig.update_layout(
+                    title='Economic Cycle Indicator and Phases',
+                    xaxis=dict(title='DATE'),
+                    yaxis=dict(
+                        title='Economic Cycle Indicator',
+                        side='left',
+                        title_standoff=20
+                    ),
+                    yaxis2=dict(
+                        title=selected_column1,
+                        overlaying='y',
+                        side='left',
+                        anchor='x',
+                        position=0.15,
+                        title_standoff=60
+                    ),
+                    yaxis3=dict(
+                        title='Phases',
+                        overlaying='y',  # 좌측 y축과 겹치도록 설정
+                        side='right',
+                        anchor='x',
+                        position=0.85
+                    ),
+                    barmode='overlay',
+                    bargap=0,
+                    template='plotly_dark',
+                    legend=dict(
+                        orientation='h',
+                        yanchor='top',
+                        y=1.1,
+                        xanchor='center',  # 범례의 x축 앵커를 가운데로
+                        x=0.5
+                    ),
+                    height=800
+                )
 
-            st.plotly_chart(fig)
+                st.plotly_chart(fig)
 
         elif selected_sub_menu == "Credit Cycle":
             st.title("Credit Cycle")
@@ -1162,65 +1164,67 @@ if authentication_status:
             df_last = df_last[['DATE', selected_column1]]
             fdf = pd.merge(fdf, df_last, on='DATE', how='left')
 
-            fig = go.Figure()
-            for phase in phase_nm:
-                fig.add_trace(go.Bar(
-                    x=fdf['DATE'], y=fdf[phase],
-                    name=f'{phase}',
-                    yaxis='y3',
-                    opacity=0.4,
-                    marker=dict(line=dict(width=0))
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                fig = go.Figure()
+                for phase in phase_nm:
+                    fig.add_trace(go.Bar(
+                        x=fdf['DATE'], y=fdf[phase],
+                        name=f'{phase}',
+                        yaxis='y3',
+                        opacity=0.4,
+                        marker=dict(line=dict(width=0))
+                    ))
+                fig.add_trace(go.Scatter(
+                    x=fdf['DATE'], y=fdf['Credit_Cycle_Indicator'],
+                    mode='lines', name='Credit_Cycle_Indicator',
+                    yaxis='y1',
+                    line=dict(width=4, color='rgb(245, 130, 32)')
                 ))
-            fig.add_trace(go.Scatter(
-                x=fdf['DATE'], y=fdf['Credit_Cycle_Indicator'],
-                mode='lines', name='Credit_Cycle_Indicator',
-                yaxis='y1',
-                line=dict(width=4, color='red')
-            ))
-            fig.add_trace(go.Scatter(
-                x=fdf['DATE'], y=fdf[selected_column1],
-                mode='lines', name=selected_column1,
-                yaxis='y2',
-                line=dict(width=4, color='blue')
-            ))
+                fig.add_trace(go.Scatter(
+                    x=fdf['DATE'], y=fdf[selected_column1],
+                    mode='lines', name=selected_column1,
+                    yaxis='y2',
+                    line=dict(width=4, color='rgb(13, 45, 79)')
+                ))
 
-            fig.update_layout(
-                title='Credit Cycle Indicator and Phases',
-                xaxis=dict(title='DATE'),
-                yaxis=dict(
-                    title='Credit Cycle Indicator',
-                    side='left',
-                    title_standoff=20
-                ),
-                yaxis2=dict(
-                    title=selected_column1,
-                    overlaying='y',
-                    side='left',
-                    anchor='x',
-                    position=0.15,
-                    title_standoff=60
-                ),
-                yaxis3=dict(
-                    title='Phases',
-                    overlaying='y',  # 좌측 y축과 겹치도록 설정
-                    side='right',
-                    anchor='x',
-                    position=0.85
-                ),
-                barmode='overlay',
-                bargap=0,
-                template='plotly_dark',
-                legend=dict(
-                    orientation='h',
-                    yanchor='top',
-                    y=1.1,
-                    xanchor='center',  # 범례의 x축 앵커를 가운데로
-                    x=0.5
-                ),
-                height=800
-            )
+                fig.update_layout(
+                    title='Credit Cycle Indicator and Phases',
+                    xaxis=dict(title='DATE'),
+                    yaxis=dict(
+                        title='Credit Cycle Indicator',
+                        side='left',
+                        title_standoff=20
+                    ),
+                    yaxis2=dict(
+                        title=selected_column1,
+                        overlaying='y',
+                        side='left',
+                        anchor='x',
+                        position=0.15,
+                        title_standoff=60
+                    ),
+                    yaxis3=dict(
+                        title='Phases',
+                        overlaying='y',  # 좌측 y축과 겹치도록 설정
+                        side='right',
+                        anchor='x',
+                        position=0.85
+                    ),
+                    barmode='overlay',
+                    bargap=0,
+                    template='plotly_dark',
+                    legend=dict(
+                        orientation='h',
+                        yanchor='top',
+                        y=1.1,
+                        xanchor='center',  # 범례의 x축 앵커를 가운데로
+                        x=0.5
+                    ),
+                    height=800
+                )
 
-            st.plotly_chart(fig)
+                st.plotly_chart(fig)
 
     elif selected_main_menu == "유사국면":
         if selected_sub_menu == "유사국면분석":
@@ -1326,13 +1330,13 @@ if authentication_status:
                 dfc = pd.concat([dfc_a, dfc_b])
 
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=dfc['dindex'], y=dfc[colnm], mode='lines',
+                fig.add_trace(go.Scatter(x=dfc['dindex'], y=dfc[colnm], mode='lines', line=dict(color='rgb(245, 130, 32)'),
                                          name=f'{colnm} ({sdate.date()} ~ {edate.date()})'))
-                fig.add_trace(go.Scatter(x=dfc['dindex'], y=dfc[f'{colnm}_sim'], mode='lines',
+                fig.add_trace(go.Scatter(x=dfc['dindex'], y=dfc[f'{colnm}_sim'], mode='lines', line=dict(color='rgb(13, 45, 79)'),
                                          name=f'{colnm}_sim ({sdate_sim.date()} ~ {edate_sim.date()})', yaxis='y2'))
 
                 specificx = 120
-                fig.add_vline(x=specificx, line_width=1, line_dash="dash", line_color="red")
+                fig.add_vline(x=specificx, line_width=1, line_dash="dash", line_color="black")
 
                 fig.update_layout(
                     title=f'Similarity: {colnm}',
@@ -1649,15 +1653,18 @@ if authentication_status:
 
             fig1 = make_subplots(specs=[[{"secondary_y": True}]])
             fig1.add_trace(
-                go.Scatter(x=dfdsline['DATE'], y=dfdsline['Actual'], mode='lines', name='Actual'),
+                go.Scatter(x=dfdsline['DATE'], y=dfdsline['Actual'], mode='lines', name='Actual',
+                           line=dict(color='rgb(245, 130, 32)')),
                 secondary_y=False
             )
             fig1.add_trace(
-                go.Scatter(x=dfdsline['DATE'], y=dfdsline['Survey'], mode='lines', name='Survey'),
+                go.Scatter(x=dfdsline['DATE'], y=dfdsline['Survey'], mode='lines', name='Survey',
+                           line=dict(color='rgb(13, 45, 79)')),
                 secondary_y=False
             )
             fig1.add_trace(
-                go.Scatter(x=dfdsline['DATE'], y=dfdsline['tgt'], mode='lines', name=seltgt, line=dict(dash='solid')),
+                go.Scatter(x=dfdsline['DATE'], y=dfdsline['tgt'], mode='lines', name=seltgt,
+                           line=dict(dash='solid', color='rgb(0, 169, 206)')),
                 secondary_y=True
             )
             fig1.update_layout(
@@ -2369,7 +2376,8 @@ if authentication_status:
                     go.Bar(
                         x=labels,
                         y=values,
-                        marker_color=['blue', 'blue', 'blue', 'blue', 'blue', 'blue']
+                        marker_color=['rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
+                                      'rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)']
                     )
                 ])
                 fig.update_layout(
@@ -2430,7 +2438,7 @@ if authentication_status:
                     go.Bar(
                         x=labels,
                         y=values,
-                        marker_color=['blue', 'blue', 'blue']
+                        marker_color=['rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)']
                     )
                 ])
                 fig.update_layout(
@@ -2495,7 +2503,8 @@ if authentication_status:
                     go.Bar(
                         x=labels,
                         y=values,
-                        marker_color=['blue', 'blue', 'blue', 'blue', 'blue', 'blue']
+                        marker_color=['rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
+                                      'rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)']
                     )
                 ])
                 fig.update_layout(
@@ -2564,7 +2573,9 @@ if authentication_status:
                     go.Bar(
                         x=labels,
                         y=values,
-                        marker_color=['blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue']
+                        marker_color=['rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
+                                      'rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
+                                      'rgb(245, 130, 32)']
                     )
                 ])
                 fig.update_layout(
@@ -2633,7 +2644,9 @@ if authentication_status:
                     go.Bar(
                         x=labels,
                         y=values,
-                        marker_color=['blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'red']
+                        marker_color=['rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
+                                      'rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
+                                      'rgb(245, 130, 32)', 'rgb(13, 45, 79)']
                     )
                 ])
                 fig.update_layout(
@@ -2685,7 +2698,7 @@ if authentication_status:
 
                 fig = make_subplots(specs=[[{"secondary_y": True}]])
                 fig.add_trace(
-                    go.Scatter(x=df['DATE'], y=df[xnm], mode='lines', name=xnm),
+                    go.Scatter(x=df['DATE'], y=df[xnm], mode='lines', line=dict(color='rgb(245, 130, 32)'), name=xnm),
                     secondary_y=False
                 )
                 for col in df.columns[2:]:
