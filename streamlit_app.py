@@ -630,7 +630,7 @@ if authentication_status:
                 dfx2 = df1[['DATE', sel_cate21]]
                 dfx2 = dfx2.dropna()
 
-            col1, col2 = st.columns(2)
+            col1, col2, col3, col4 = st.columns(4)
 
             if sel_cate11 != '선택 없음':
                 with col1:
