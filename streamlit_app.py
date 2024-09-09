@@ -318,7 +318,7 @@ if authentication_status:
             st.title("Market Chart")
 
             sel_cate = st.selectbox("Category",
-                                    ['All', 'Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy'])
+                                    ['Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy', 'All'])
 
             def plot_ts(df, sel_colx, selecpr):
                 edate = df['DATE'].max()
@@ -356,7 +356,7 @@ if authentication_status:
                         st.plotly_chart(fig1)
 
 
-            if sel_cate in ['All', 'Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy']:
+            if sel_cate in ['Global 10Y', 'Credit Spread', 'FX', 'StockIndex', 'SPX Sector', 'S&P GSCI', 'Energy', 'All']:
 
                 if sel_cate == "All":
                     df1 = pd.read_excel(market_path, sheet_name="G10Y")
@@ -390,8 +390,71 @@ if authentication_status:
                 sel_colx = st.multiselect(
                     "Select:",
                     sel_cols,
-                    default=sel_cols[:4]
+                    default=sel_cols
                 )
+
+                if sel_cate != "All":
+                    dfa = df[['DATE'] + sel_colx]
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        kdt = st.date_input("Date", min_value=dfa['DATE'].min(), max_value=dfa['DATE'].max(), value=dfa['DATE'].max())
+                    with col2:
+                        selchg = st.radio("등락계산 기준", ["Change", "Percent"], horizontal=True)
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        selpr1 = st.radio("기준구간", ["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y", "MTD", "YTD"],
+                                          horizontal=True, index=0)
+                    with col2:
+                        selpr2 = st.radio("비교구간", ["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y", "MTD", "YTD"],
+                                          horizontal=True, index=1)
+
+                    if selchg == "Change":
+                        chgoptx = 2
+                    elif selchg == "Percent":
+                        chgoptx = 1
+
+                    dfb = dfa[(dfa['DATE'] <= pd.to_datetime(kdt))]
+                    dfb['DATE'] = pd.to_datetime(dfb['DATE'])
+                    stable, grid_options = cal_table(df=dfb, chgopt=chgoptx, spechk=1)
+                    if selpr1 == selpr2:
+                        stablex = stable[['X', selpr1]]
+                    else:
+                        stablex = stable[['X', selpr1, selpr2]]
+                    stablex = stablex.sort_values(by=selpr1, ascending=False)
+
+                    figb = go.Figure()
+                    figb.add_trace(go.Bar(
+                        x=stablex['X'],
+                        y=stablex[selpr1],
+                        name=selpr1,
+                        marker=dict(
+                            color='rgb(245,130,32)',
+                            line=dict(
+                                width=0
+                            )
+                        )
+                    ))
+                    if len(stablex.columns) > 2:
+                        figb.add_trace(go.Bar(
+                            x=stablex['X'],
+                            y=stablex[selpr2],
+                            name=selpr2,
+                            marker=dict(
+                                color='rgb(13,45,79)',
+                                line=dict(
+                                    width=0
+                                )
+                            )
+                        ))
+                    figb.update_layout(
+                        barmode='group' if len(stablex.columns) > 2 else 'overlay',
+                        xaxis_title=sel_cate,
+                        yaxis_title='Chg/Pct',
+                        title=''
+                    )
+                    st.plotly_chart(figb)
+
                 selecpr = st.radio("", ["1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y"], horizontal=True)
                 plot_ts(df, sel_colx, selecpr)
 
@@ -470,6 +533,26 @@ if authentication_status:
 
                 st.plotly_chart(fig1)
 
+            dfxx['DATE'] = pd.to_datetime(dfxx['DATE'])
+            df_frix = dfxx[dfxx['DATE'].dt.dayofweek == 4]
+            df_frifx = df_frix.tail(4)
+            colb = [col for col in df_frifx.columns if col != 'DATE']
+
+            figx = make_subplots(rows=1, cols=len(colb), shared_yaxes=True,
+                                subplot_titles=colb)
+            for i, col in enumerate(colb, start=1):
+                ftextx = df_frifx[col].apply(lambda x: f'{x:.2f}')
+                figx.add_trace(go.Bar(x=df_frifx['DATE'], y=df_frifx[col], name=col, text=ftextx, textposition='outside'),
+                              row=1, col=i)
+            figx.update_layout(
+                title="만기별 금리: 최근 4주 추이",
+                xaxis_title="Date",
+                yaxis_title="금리",
+                barmode='group',
+                height=400
+            )
+            st.plotly_chart(figx)
+
             dfyyy['DATE'] = pd.to_datetime(dfyyy['DATE'])
             df_fri = dfyyy[dfyyy['DATE'].dt.dayofweek == 4]
             df_frif = df_fri.tail(4)
@@ -477,14 +560,12 @@ if authentication_status:
 
             fig = make_subplots(rows=1, cols=len(cola), shared_yaxes=True,
                                 subplot_titles=cola)
-
             for i, col in enumerate(cola, start=1):
                 ftext = df_frif[col].apply(lambda x: f'{x:.3f}')
                 fig.add_trace(go.Bar(x=df_frif['DATE'], y=df_frif[col], name=col, text=ftext, textposition='outside'),
                               row=1, col=i)
-
             fig.update_layout(
-                title="최근 4주 추이",
+                title="스프레드: 최근 4주 추이",
                 xaxis_title="Date",
                 yaxis_title="Spr",
                 barmode='group',
