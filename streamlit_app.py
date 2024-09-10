@@ -2283,20 +2283,20 @@ if authentication_status:
                     yaxis='y2',
                     opacity=0.4,
                     showlegend=False,
-                    marker=dict(line=dict(width=0))
+                    marker=dict(line=dict(width=0, color = 'rgb(245, 130, 32)'))
                 ))
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Conviction'],
                     name='Conviction',
                     yaxis='y2',
                     opacity=0.4,
-                    marker=dict(line=dict(width=0))
+                    marker=dict(line=dict(width=0, color='rgb(255, 217, 102'))
                 ))
                 fig1.add_trace(go.Scatter(
                     x=fdf.index, y=fdf[fxnm],
                     mode='lines', name=f'{fxnm}',
                     yaxis='y1',
-                    line=dict(width=4, color='red')
+                    line=dict(width=4, color='rgb(13, 45, 79)')
                 ))
 
                 fig1.update_layout(
@@ -2820,9 +2820,9 @@ if authentication_status:
                 fig.update_layout(
                     title_text=f"Fractal Dimension Signal of {xnm}",
                     xaxis_title='Date',
-                    yaxis_title=xnm,  # 좌측 y축
-                    yaxis2_title="Signal",  # 우측 y축
-                    barmode='overlay',  # 막대 차트가 그룹으로 표시되도록 설정
+                    yaxis_title=xnm,
+                    yaxis2_title="Signal",
+                    barmode='overlay',
                     bargap=0,
                     bargroupgap=0
                 )
