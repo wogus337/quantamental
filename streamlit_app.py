@@ -2283,14 +2283,14 @@ if authentication_status:
                     yaxis='y2',
                     opacity=0.4,
                     showlegend=False,
-                    marker=dict(line=dict(width=0, color = 'rgb(245, 130, 32)'))
+                    marker=dict(line=dict(width=0, color='rgb(245, 130, 32)'))
                 ))
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Conviction'],
                     name='Conviction',
                     yaxis='y2',
                     opacity=0.4,
-                    marker=dict(line=dict(width=0, color='rgb(255, 217, 102'))
+                    marker=dict(line=dict(width=0, color='rgb(255, 217, 102)'))
                 ))
                 fig1.add_trace(go.Scatter(
                     x=fdf.index, y=fdf[fxnm],
@@ -2328,13 +2328,13 @@ if authentication_status:
                     x=fdf.index, y=fdf['FX_Long'],
                     mode='lines', name=f'{fxnm}',
                     yaxis='y1',
-                    line=dict(width=4, color='red')
+                    line=dict(width=4, color='rgb(245, 130, 32)')
                 ))
                 fig2.add_trace(go.Scatter(
                     x=fdf.index, y=fdf['Strategy'],
                     mode='lines', name='Strategy',
                     yaxis='y1',
-                    line=dict(width=4, color='blue')
+                    line=dict(width=4, color='rgb(13, 45, 79)')
                 ))
                 fig2.update_layout(
                     xaxis_title='DATE',
