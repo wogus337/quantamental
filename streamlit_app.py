@@ -11,12 +11,16 @@ import openpyxl
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import datetime
+from datetime import datetime, timedelta
 import streamlit_authenticator as stauth
 import yaml
 import statsmodels.api as sm
 from statsmodels.stats.stattools import durbin_watson
 from sklearn.linear_model import LinearRegression
-
+import requests
+import zipfile
+import xml.etree.ElementTree as ET
+from io import BytesIO
 
 series_path = "data/streamlit_24.xlsx"
 cylfile_path = "data/streamlit_24_cycle.xlsx"
@@ -237,10 +241,13 @@ if authentication_status:
     st.sidebar.markdown("<h1 style='font-size: 35px; font-weight: bold;'>QIS Square</h1>", unsafe_allow_html=True)
 
     # main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "Allocation", "시나리오"]
-    main_menu_options = ["Market", "Relative", "국면", "유사국면", "Macro 분석", "모델전망 & Signal"]
+    main_menu_options = ["Market", "Relative", "국면", "유사국면", "Macro 분석", "모델전망 & Signal", "DART공시정보 검색"]
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
-    if selected_main_menu == "Market":
+    if selected_main_menu == "DART공시정보 검색":
+        sub_menu_options = ["최근 공시정보 검색"]
+
+    elif selected_main_menu == "Market":
         sub_menu_options = ["MarketBoard", "MarketChart", "주요국 만기별 금리"]
 
     elif selected_main_menu == "Relative":
@@ -259,6 +266,110 @@ if authentication_status:
         sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "RankingModel", "FX", "FDS"]
 
     selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
+
+    if selected_main_menu == "DART공시정보 검색":
+        if selected_sub_menu == "최근 공시정보 검색":
+
+            st.title("금융감독원 DART API - 공시정보 검색")
+
+            # DART API Key
+            api_key = "a3b2b551fee2036c0ebeb01e412887bcb30e5962"
+
+            # 회사 코드와 주식 코드 매핑
+            def create_stock_to_corp_mapping(api_key):
+                api_url = "https://opendart.fss.or.kr/api/corpCode.xml"
+                params = {'crtfc_key': api_key}
+                response = requests.get(api_url, params=params)
+
+                if response.status_code == 200:
+                    zip_data = response.content
+                    with zipfile.ZipFile(BytesIO(zip_data)) as z:
+                        xml_file = z.open(z.namelist()[0])
+                        xml_data = xml_file.read()
+
+                    root = ET.fromstring(xml_data)
+                    mapping = {}
+                    for corp in root.findall('.//list'):
+                        stock_code = corp.find('stock_code').text.strip()
+                        corp_code = corp.find('corp_code').text
+                        if stock_code:
+                            mapping[stock_code] = corp_code
+                    return mapping
+                else:
+                    raise Exception(f"API 요청 실패: {response.status_code}")
+
+
+            # 매핑
+            stock_to_corp_mapping = create_stock_to_corp_mapping(api_key)
+
+            col1, col2 = st.columns([4,1])
+            with col1:
+                # 검색 기준 선택
+                search_type = st.radio("검색 기준을 선택하세요:", ("주식 코드", "기업 코드"), horizontal=True)
+
+            # 코드 입력 받기
+            if search_type == "주식 코드":
+                codes = st.text_area("주식 코드를 입력하세요 (쉼표로 구분):", "005930, 000660, 005380")
+            elif search_type == "기업 코드":
+                codes = st.text_area("기업 코드를 입력하세요 (쉼표로 구분):", "00126380, 003550, 005930")
+
+            days = st.number_input("최근 X일:", min_value=1, value=7)
+
+            end_date = datetime.now().strftime('%Y%m%d')
+            start_date = (datetime.now() - timedelta(days=days)).strftime('%Y%m%d')
+
+            # 공시정보 검색 함수
+            def get_disclosure_info(corp_code, start_date, end_date):
+                api_url = "https://opendart.fss.or.kr/api/list.json"
+                params = {
+                    'crtfc_key': api_key,
+                    'corp_code': corp_code,
+                    'bgn_de': start_date,
+                    'end_de': end_date,
+                    'page_no': 1,
+                    'page_count': 100
+                }
+                response = requests.get(api_url, params=params)
+
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    st.error(f"API 요청에 실패했습니다. 상태 코드: {response.status_code}")
+                    return None
+
+            # 검색 버튼
+            if st.button("검색"):
+                codes = [code.strip() for code in codes.split(',')]
+                all_data = []
+
+                for code in codes:
+                    if search_type == "주식 코드":
+                        corp_code = stock_to_corp_mapping.get(code)
+                        if not corp_code:
+                            st.warning(f"{code}에 대한 회사 코드가 없습니다.")
+                            continue
+                    else:
+                        corp_code = code
+
+                    json_data = get_disclosure_info(corp_code, start_date, end_date)
+                    if json_data and 'list' in json_data:
+                        for item in json_data['list']:
+                            item['corp_code'] = corp_code
+                            item['rcept_url'] = f"https://dart.fss.or.kr/dsaf001/main.do?rcpNo={item['rcept_no']}"
+                            all_data.append(item)
+
+                if all_data:
+                    df = pd.DataFrame(all_data)
+
+                    # 하이퍼링크 추가
+                    df['report_nm'] = df.apply(
+                        lambda row: f'<a href="{row["rcept_url"]}" target="_blank">{row["report_nm"]}</a>',
+                        axis=1)
+
+                    # Streamlit에 HTML 테이블 출력
+                    st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+                else:
+                    st.error("공시정보를 가져올 수 없습니다.")
 
     if selected_main_menu == "Market":
         if selected_sub_menu == "MarketBoard":
