@@ -2281,7 +2281,7 @@ if authentication_status:
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf[selprob],
                     yaxis='y2',
-                    opacity=0.4,
+                    opacity=1,
                     showlegend=False,
                     marker=dict(
                         color='rgb(245, 130, 32)',
@@ -2292,7 +2292,7 @@ if authentication_status:
                     x=fdf.index, y=fdf['Conviction'],
                     name='Conviction',
                     yaxis='y2',
-                    opacity=0.4,
+                    opacity=1,
                     marker=dict(
                         color='rgb(255, 217, 102)',
                         line=dict(width=0)
@@ -2374,22 +2374,28 @@ if authentication_status:
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Prob1'],
                     yaxis='y2',
-                    opacity=0.4,
+                    opacity=1,
                     showlegend=False,
-                    marker=dict(line=dict(width=0))
+                    marker=dict(
+                        color='rgb(245, 130, 32)',
+                        line=dict(width=0)
+                    )
                 ))
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Conviction'],
                     name='Conviction',
                     yaxis='y2',
-                    opacity=0.4,
-                    marker=dict(line=dict(width=0))
+                    opacity=1,
+                    marker=dict(
+                        color='rgb(255, 217, 102)',
+                        line=dict(width=0)
+                    )
                 ))
                 fig1.add_trace(go.Scatter(
                     x=fdf.index, y=fdf[fxnm],
                     mode='lines', name=f'{fxnm}',
                     yaxis='y1',
-                    line=dict(width=4, color='red')
+                    line=dict(width=4, color='rgb(13, 45, 79)')
                 ))
 
                 fig1.update_layout(
