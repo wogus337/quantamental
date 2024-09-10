@@ -2279,15 +2279,7 @@ if authentication_status:
 
                 fig1 = go.Figure()
 
-                # Scatter (line) 그래프를 가장 먼저 추가합니다
-                fig1.add_trace(go.Scatter(
-                    x=fdf.index, y=fdf[fxnm],
-                    mode='lines', name=f'{fxnm}',
-                    yaxis='y1',
-                    line=dict(width=4, color='rgb(13, 45, 79)'),
-                    stackgroup=None
-                ))
-
+                # Bar 그래프에 zindex=1을 추가합니다
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Prob1'],
                     yaxis='y2',
@@ -2296,7 +2288,8 @@ if authentication_status:
                     marker=dict(
                         color='rgb(245, 130, 32)',
                         line=dict(width=0)
-                    )
+                    ),
+                    zindex=1  # zindex 추가
                 ))
 
                 fig1.add_trace(go.Bar(
@@ -2307,9 +2300,19 @@ if authentication_status:
                     marker=dict(
                         color='rgb(255, 217, 102)',
                         line=dict(width=0)
-                    )
+                    ),
+                    zindex=1  # zindex 추가
                 ))
 
+                # Scatter (line) 그래프에 zindex=2를 추가하여 가장 위에 오도록 합니다
+                fig1.add_trace(go.Scatter(
+                    x=fdf.index, y=fdf[fxnm],
+                    mode='lines', name=f'{fxnm}',
+                    yaxis='y1',
+                    line=dict(width=4, color='rgb(13, 45, 79)'),
+                    stackgroup=None,
+                    zindex=2  # zindex 추가
+                ))
 
                 fig1.update_layout(
                     title=chart_title,
@@ -2377,15 +2380,7 @@ if authentication_status:
 
                 fig1 = go.Figure()
 
-                # Scatter (line) 그래프를 가장 먼저 추가합니다
-                fig1.add_trace(go.Scatter(
-                    x=fdf.index, y=fdf[fxnm],
-                    mode='lines', name=f'{fxnm}',
-                    yaxis='y1',
-                    line=dict(width=4, color='rgb(13, 45, 79)'),
-                    stackgroup=None
-                ))
-
+                # Bar 그래프에 zindex=1을 추가합니다
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Prob1'],
                     yaxis='y2',
@@ -2394,7 +2389,8 @@ if authentication_status:
                     marker=dict(
                         color='rgb(245, 130, 32)',
                         line=dict(width=0)
-                    )
+                    ),
+                    zindex=1  # zindex 추가
                 ))
 
                 fig1.add_trace(go.Bar(
@@ -2405,7 +2401,18 @@ if authentication_status:
                     marker=dict(
                         color='rgb(255, 217, 102)',
                         line=dict(width=0)
-                    )
+                    ),
+                    zindex=1  # zindex 추가
+                ))
+
+                # Scatter (line) 그래프에 zindex=2를 추가하여 가장 위에 오도록 합니다
+                fig1.add_trace(go.Scatter(
+                    x=fdf.index, y=fdf[fxnm],
+                    mode='lines', name=f'{fxnm}',
+                    yaxis='y1',
+                    line=dict(width=4, color='rgb(13, 45, 79)'),
+                    stackgroup=None,
+                    zindex=2  # zindex 추가
                 ))
 
                 fig1.update_layout(
