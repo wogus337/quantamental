@@ -2283,15 +2283,22 @@ if authentication_status:
                     yaxis='y2',
                     opacity=0.4,
                     showlegend=False,
-                    marker=dict(line=dict(width=0, color='rgb(245, 130, 32)'))
+                    marker=dict(
+                        color='rgb(245, 130, 32)',
+                        line=dict(width=0)
+                    )
                 ))
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Conviction'],
                     name='Conviction',
                     yaxis='y2',
                     opacity=0.4,
-                    marker=dict(line=dict(width=0, color='rgb(255, 217, 102)'))
+                    marker=dict(
+                        color='rgb(255, 217, 102)',
+                        line=dict(width=0)
+                    )
                 ))
+
                 fig1.add_trace(go.Scatter(
                     x=fdf.index, y=fdf[fxnm],
                     mode='lines', name=f'{fxnm}',
