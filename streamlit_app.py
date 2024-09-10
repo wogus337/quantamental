@@ -2305,7 +2305,8 @@ if authentication_status:
                     x=fdf.index, y=fdf[fxnm],
                     mode='lines', name=f'{fxnm}',
                     yaxis='y1',
-                    line=dict(width=4, color='rgb(13, 45, 79)')
+                    line=dict(width=4, color='rgb(13, 45, 79)'),
+                    stackgroup=None
                 ))
 
 
@@ -2401,7 +2402,8 @@ if authentication_status:
                     x=fdf.index, y=fdf[fxnm],
                     mode='lines', name=f'{fxnm}',
                     yaxis='y1',
-                    line=dict(width=4, color='rgb(13, 45, 79)')
+                    line=dict(width=4, color='rgb(13, 45, 79)'),
+                    stackgroup=None
                 ))
 
                 fig1.update_layout(
