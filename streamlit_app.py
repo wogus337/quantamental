@@ -2278,14 +2278,8 @@ if authentication_status:
                 # fdf = fdf.reindex(fdf.index.union(missing_dates)).sort_index().ffill()
 
                 fig1 = go.Figure()
-                fig1.add_trace(go.Scatter(
-                    x=fdf.index, y=fdf[fxnm],
-                    mode='lines', name=f'{fxnm}',
-                    yaxis='y1',
-                    line=dict(width=4, color='rgb(13, 45, 79)')
-                ))
                 fig1.add_trace(go.Bar(
-                    x=fdf.index, y=fdf[selprob],
+                    x=fdf.index, y=fdf['Prob1'],
                     yaxis='y2',
                     opacity=1,
                     showlegend=False,
@@ -2294,6 +2288,7 @@ if authentication_status:
                         line=dict(width=0)
                     )
                 ))
+
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Conviction'],
                     name='Conviction',
@@ -2303,6 +2298,14 @@ if authentication_status:
                         color='rgb(255, 217, 102)',
                         line=dict(width=0)
                     )
+                ))
+
+                # Scatter (line) 그래프를 마지막에 추가합니다
+                fig1.add_trace(go.Scatter(
+                    x=fdf.index, y=fdf[fxnm],
+                    mode='lines', name=f'{fxnm}',
+                    yaxis='y1',
+                    line=dict(width=4, color='rgb(13, 45, 79)')
                 ))
 
 
@@ -2371,12 +2374,6 @@ if authentication_status:
                 #fdf = fdf.reindex(all_dates).ffill()
 
                 fig1 = go.Figure()
-                fig1.add_trace(go.Scatter(
-                    x=fdf.index, y=fdf[fxnm],
-                    mode='lines', name=f'{fxnm}',
-                    yaxis='y1',
-                    line=dict(width=4, color='rgb(13, 45, 79)')
-                ))
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Prob1'],
                     yaxis='y2',
@@ -2387,6 +2384,7 @@ if authentication_status:
                         line=dict(width=0)
                     )
                 ))
+
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Conviction'],
                     name='Conviction',
@@ -2396,6 +2394,14 @@ if authentication_status:
                         color='rgb(255, 217, 102)',
                         line=dict(width=0)
                     )
+                ))
+
+                # Scatter (line) 그래프를 마지막에 추가합니다
+                fig1.add_trace(go.Scatter(
+                    x=fdf.index, y=fdf[fxnm],
+                    mode='lines', name=f'{fxnm}',
+                    yaxis='y1',
+                    line=dict(width=4, color='rgb(13, 45, 79)')
                 ))
 
                 fig1.update_layout(
