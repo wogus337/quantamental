@@ -21,6 +21,10 @@ import requests
 import zipfile
 import xml.etree.ElementTree as ET
 from io import BytesIO
+from scipy.odr import ODR, Model, RealData
+from scipy.stats import linregress
+import itertools
+
 
 series_path = "data/streamlit_24.xlsx"
 cylfile_path = "data/streamlit_24_cycle.xlsx"
@@ -32,6 +36,7 @@ usig_path = "data/streamlit_24_usigpick.xlsx"
 market_path = "data/streamlit_24_marketVV.xlsx"
 allo_path = "data/streamlit_24_allocation.xlsx"
 fds_path = "data/streamlit_24_fds.xlsx"
+pairres_path = "data/relativ_analysis_out_240830.csv"
 image_path = "images/miraeasset.png"
 igimage_path = "images/usig.png"
 #
@@ -45,6 +50,7 @@ igimage_path = "images/usig.png"
 # market_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_marketVV.xlsx"
 # allo_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_allocation.xlsx"
 # fds_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fds.xlsx"
+# pairres_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\relativ_analysis_out_240830.csv"
 # image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
 # igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
 
@@ -251,7 +257,7 @@ if authentication_status:
         sub_menu_options = ["MarketBoard", "MarketChart", "주요국 만기별 금리"]
 
     elif selected_main_menu == "Relative":
-        sub_menu_options = ["Relative(Trend)", "Relative(Momentum)", "현재위치"]
+        sub_menu_options = ["Relative(Trend)", "Relative(Momentum)", "Relative(Pair)", "현재위치"]
 
     elif selected_main_menu == "국면":
         sub_menu_options = ["Economic Cycle", "Credit Cycle"]
@@ -1006,6 +1012,154 @@ if authentication_status:
             )
             st.plotly_chart(fig)
 
+        elif selected_sub_menu == "Relative(Pair)":
+
+            st.title("Relative(Pair)")
+
+            df1 = pd.read_excel(market_path, sheet_name='G10Y')
+            df2 = pd.read_excel(market_path, sheet_name='FX')
+            df3 = pd.read_excel(market_path, sheet_name='Cntry')
+            df3 = df3.loc[:, ~df3.columns.str.endswith('10Y')]
+            dfs = [df1, df2, df3]
+            df = reduce(lambda left, right: pd.merge(left, right, on='DATE', how='outer'), dfs)
+            dfx = df[df["DATE"].dt.weekday == 4]
+
+            dffil = pd.read_csv(pairres_path)
+            dffil_lst = dffil.copy()
+            dffil_lst.insert(0, 'Pair', dffil_lst['Col_X'] + ' - ' + dffil_lst['Col_Y'])
+
+            st.dataframe(dffil)
+            st.write("")
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                last_n = st.number_input(label="관찰기간", value=52, step=1)
+            with col2:
+                na = st.radio(label="분석기간", options=["26", "52", "104", "156"], horizontal=True)
+
+            ana_n = int(na)
+
+            col1, col2 = st.columns(2)
+            pair0 = dffil_lst[dffil_lst['N_analysis'] == ana_n]
+            pairlst = pair0['Pair'].tolist()
+            with col1:
+                sel_pairlst = st.selectbox("Pair 선택", pairlst)
+
+            dffil_x = pair0[pair0['Pair'] == sel_pairlst]
+            st.dataframe(dffil_x)
+            st.write("")
+
+            sel_case = pair0[pair0['Pair'] == sel_pairlst]
+            x_col = sel_case['Col_X'].iloc[0]
+            y_col = sel_case['Col_Y'].iloc[0]
+            dfa = dfx[['DATE', x_col, y_col]]
+
+            df_ratio = dfa.copy()
+            df_ratio['ratio'] = df_ratio.iloc[:, 1] / df_ratio.iloc[:, 2]
+            df_ratio['ratio_upper'] = df_ratio.iloc[:, 3].rolling(window=ana_n).mean() + 2 * df_ratio.iloc[:,
+                                                                                             3].rolling(
+                window=ana_n).std()
+            df_ratio['ratio_lower'] = df_ratio.iloc[:, 3].rolling(window=ana_n).mean() - 2 * df_ratio.iloc[:,
+                                                                                             3].rolling(
+                window=ana_n).std()
+            f_ratio = df_ratio.tail(last_n)
+
+            df_ortho = dfa.copy()
+            df_ortho['DATE'] = pd.to_datetime(df_ortho['DATE'])
+            df_ortho = df_ortho.sort_values(by='DATE', ascending=False)
+
+            f_ortho = []
+            for i in range(last_n - 1, -1, -1):
+                ana_s = i + ana_n
+                dfr = df_ortho.iloc[i:ana_s]
+                dfr = dfr.sort_values(by='DATE', ascending=True)
+                x = dfr.iloc[:, 1].values
+                y = dfr.iloc[:, 2].values
+
+                corr_m = np.corrcoef(x, y)
+                corr = corr_m[0, 1]
+
+
+                def linear_function(beta, x):
+                    return beta[0] * x + beta[1]
+
+
+                real_data = RealData(x, y)
+                linear_model = Model(linear_function)
+                odr = ODR(real_data, linear_model, beta0=[1., 0.])  # 초기값 beta0: [기울기, 절편]
+                output = odr.run()
+                intercept = output.beta[1]
+                slope = output.beta[0]
+                dfr['pred'] = dfr.iloc[:, 1] * slope + intercept
+                dfr['ortho_resid'] = dfr.iloc[:, 2] - dfr['pred']
+                dfr['ortho_upper'] = dfr['ortho_resid'].mean() + 2 * dfr['ortho_resid'].std()
+                dfr['ortho_lower'] = dfr['ortho_resid'].mean() - 2 * dfr['ortho_resid'].std()
+                dfr['corr'] = corr
+                dfr['ortho_slope'] = slope
+                dfr['ortho_inter'] = intercept
+                dfr = dfr.tail(1)
+                dfr = dfr[['DATE', 'ortho_resid', 'ortho_upper', 'ortho_lower', 'corr', 'ortho_slope', 'ortho_inter']]
+                f_ortho.append(dfr)
+
+            f_ortho = pd.concat(f_ortho, ignore_index=True)
+
+            f_final = pd.merge(f_ratio, f_ortho, on='DATE', how='inner')
+            f_final = f_final[['DATE', x_col, y_col, 'ratio_lower', 'ratio', 'ratio_upper',
+                               'ortho_lower', 'ortho_resid', 'ortho_upper']]
+
+            df = f_final.copy()
+
+            fig1 = go.Figure()
+            fig1.add_trace(go.Scatter(x=df['DATE'], y=df[x_col], mode='lines', name=x_col, yaxis='y1',
+                                      line=dict(color='rgb(245, 130, 32)')))
+            fig1.add_trace(go.Scatter(x=df['DATE'], y=df[y_col], mode='lines', name=y_col, yaxis='y2',
+                                      line=dict(color='rgb(13, 45, 79)')))
+            fig1.update_layout(
+                title=f"f{x_col} & {y_col}",
+                xaxis=dict(title='DATE'),
+                yaxis=dict(title=x_col, side='left'),
+                yaxis2=dict(title=y_col, side='right', overlaying='y', anchor='x')
+            )
+
+            slope, intercept, r_value, p_value, std_err = linregress(df[x_col], df[y_col])
+            regression_line_x = df[x_col]
+            regression_line_y = slope * regression_line_x + intercept
+
+            fig2 = go.Figure()
+            fig2.add_trace(
+                go.Scatter(x=df[x_col], y=df[y_col], mode='markers', marker=dict(color='rgb(245, 130, 32)', size=5)))
+            fig2.add_trace(go.Scatter(x=[df[x_col].iloc[-1]], y=[df[y_col].iloc[-1]],
+                                      mode='markers', marker=dict(color='rgb(13, 45, 79)', size=15)))
+            fig2.add_trace(go.Scatter(x=regression_line_x, y=regression_line_y, mode='lines',
+                                      line=dict(color='rgb(0, 0, 0)', width=2)))
+            fig2.update_layout(title="Scatter Plot", xaxis_title=x_col, yaxis_title=y_col)
+
+            fig3 = go.Figure()
+            fig3.add_trace(go.Scatter(x=df['DATE'], y=df['ratio_lower'], mode='lines', name='ratio_lower',
+                                      line=dict(color='rgb(13, 45, 79)')))
+            fig3.add_trace(go.Scatter(x=df['DATE'], y=df['ratio'], mode='lines', name='ratio',
+                                      line=dict(width=5, color='rgb(245, 130, 32)')))
+            fig3.add_trace(go.Scatter(x=df['DATE'], y=df['ratio_upper'], mode='lines', name='ratio_upper',
+                                      line=dict(color='rgb(13, 45, 79)')))
+            fig3.update_layout(title="Ratio", xaxis_title='DATE')
+
+            fig4 = go.Figure()
+            fig4.add_trace(go.Scatter(x=df['DATE'], y=df['ortho_lower'], mode='lines', name='ortho_lower',
+                                      line=dict(color='rgb(13, 45, 79)')))
+            fig4.add_trace(go.Scatter(x=df['DATE'], y=df['ortho_resid'], mode='lines', name='ortho_resid',
+                                      line=dict(width=5, color='rgb(245, 130, 32)')))
+            fig4.add_trace(go.Scatter(x=df['DATE'], y=df['ortho_upper'], mode='lines', name='ortho_upper',
+                                      line=dict(color='rgb(13, 45, 79)')))
+            fig4.update_layout(title="Orthogonal Regression Residuals", xaxis_title='DATE')
+
+            col1, col2, col3 = st.columns([2, 2, 1])
+            with col1:
+                st.plotly_chart(fig1)
+                st.plotly_chart(fig3)
+            with col2:
+                st.plotly_chart(fig2)
+                st.plotly_chart(fig4)
+
         elif selected_sub_menu == "현재위치":
 
             st.title("현재위치")
@@ -1128,6 +1282,7 @@ if authentication_status:
 
     elif selected_main_menu == "국면":
         if selected_sub_menu == "Economic Cycle":
+
             st.title("Economic Cycle")
 
             df1 = pd.read_excel(market_path, sheet_name="G10Y")
@@ -1227,12 +1382,13 @@ if authentication_status:
                         xanchor='center',  # 범례의 x축 앵커를 가운데로
                         x=0.5
                     ),
-                    height=800
+                    height=600
                 )
 
                 st.plotly_chart(fig)
 
         elif selected_sub_menu == "Credit Cycle":
+
             st.title("Credit Cycle")
 
             df1 = pd.read_excel(market_path, sheet_name="G10Y")
@@ -1332,7 +1488,7 @@ if authentication_status:
                         xanchor='center',  # 범례의 x축 앵커를 가운데로
                         x=0.5
                     ),
-                    height=800
+                    height=600
                 )
 
                 st.plotly_chart(fig)
@@ -2263,72 +2419,52 @@ if authentication_status:
             st.title("FX Strategy by Transformer")
             st.write("!! 2024.08.26일. USDKRW의 USD 강세모델에서 USD 강세 시그널 발생 !!")
 
-            def fxgenfig1(xrange, fxnm, selprob, chart_title, df_path=fx_path):
-                df = pd.read_excel(df_path, sheet_name='fx', usecols=xrange, skiprows=0)
-                colnm = ['DATE', 'Prob0', 'Prob1', fxnm, 'fx_v', 'Conviction', 'FX_Long', 'Strategy']
-                df.columns = colnm
+            def fxgenfig1(fxnm, selprob, chart_title, df_path=fx_path):
+                df = pd.read_excel(df_path, sheet_name=fxnm)
+                if fxnm == "KRWUSD":
+                    fxnm = "USDKRW"
+                    colnm = ['DATE', 'Prob0', 'Prob1', fxnm, 'fx_v', 'Conviction', 'FX_Long', 'Strategy']
+                    df.columns = colnm
                 df = df[df['DATE'].notna()]
                 fdf = df[df['DATE'] >= pd.Timestamp('2021-01-04')]
 
                 fdf.set_index('DATE', inplace=True)
                 all_dates = pd.date_range(start=fdf.index.min(), end=fdf.index.max(), freq='D')
                 fdf = fdf.reindex(all_dates, method='pad')
-                # all_dates = pd.date_range(start=fdf.index.min(), end=fdf.index.max(), freq='D')
-                # missing_dates = all_dates.difference(fdf.index)
-                # fdf = fdf.reindex(fdf.index.union(missing_dates)).sort_index().ffill()
 
-                fig1 = go.Figure()
-
-                # Bar 그래프에 zindex=1을 추가합니다
+                fig1 = make_subplots(specs=[[{"secondary_y": True}]])
                 fig1.add_trace(go.Bar(
-                    x=fdf.index, y=fdf['Prob1'],
-                    yaxis='y2',
+                    x=fdf.index, y=fdf[selprob],
                     opacity=1,
                     showlegend=False,
                     marker=dict(
                         color='rgb(245, 130, 32)',
                         line=dict(width=0)
-                    ),
-                    zindex=1  # zindex 추가
-                ))
-
+                    )
+                ), secondary_y=False)
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Conviction'],
                     name='Conviction',
-                    yaxis='y2',
                     opacity=1,
                     marker=dict(
                         color='rgb(255, 217, 102)',
                         line=dict(width=0)
-                    ),
-                    zindex=1  # zindex 추가
-                ))
-
-                # Scatter (line) 그래프에 zindex=2를 추가하여 가장 위에 오도록 합니다
+                    )
+                ), secondary_y=False)
                 fig1.add_trace(go.Scatter(
                     x=fdf.index, y=fdf[fxnm],
                     mode='lines', name=f'{fxnm}',
-                    yaxis='y1',
                     line=dict(width=4, color='rgb(13, 45, 79)'),
-                    stackgroup=None,
-                    zindex=2  # zindex 추가
-                ))
+                    stackgroup=None
+                ), secondary_y=True)
 
                 fig1.update_layout(
-                    title=chart_title,
-                    xaxis=dict(title='DATE'),
-                    yaxis=dict(
-                        title=fxnm,
-                        side='left'
-                    ),
-                    yaxis2=dict(
-                        title='Conviction',
-                        overlaying='y',
-                        side='right'
-                    ),
                     barmode='overlay',
-                    bargap=0,
-                    template='plotly_dark',
+                    bargap=0.15,
+                    title=chart_title,
+                    xaxis_title='Date',
+                    yaxis_title='Prob/Conviction',
+                    yaxis2_title=f'{fxnm}',
                     legend=dict(
                         orientation='h',
                         yanchor='top',
@@ -2337,6 +2473,10 @@ if authentication_status:
                         x=0.5
                     )
                 )
+
+                fig1.update_yaxes(range=[0, max(fdf['Prob1'].max(), fdf['Conviction'].max()) * 1.1], secondary_y=False)
+                fig1.update_yaxes(range=[fdf[fxnm].min() * 0.9, fdf[fxnm].max() * 1.1], secondary_y=True)
+                fig1.update_traces(opacity=1, selector=dict(type='bar'))
 
                 fig2 = go.Figure()
                 fig2.add_trace(go.Scatter(
@@ -2366,70 +2506,48 @@ if authentication_status:
                 return fig1, fig2
 
 
-            def fxgenfig2(xrange, fxnm, chart_title, df_path=fx_path):
-                df = pd.read_excel(df_path, sheet_name='fx', usecols=xrange, skiprows=0)
-                colnm = ['DATE', 'Prob0', 'Prob1', fxnm, 'fx_v', 'Conviction']
-                df.columns = colnm
+            def fxgenfig2(fxnm, chart_title, df_path=fx_path):
+                df = pd.read_excel(df_path, sheet_name=fxnm)
                 df = df[df['DATE'].notna()]
                 fdf = df[df['DATE'] >= pd.Timestamp('2021-01-04')]
 
                 fdf.set_index('DATE', inplace=True)
                 all_dates = pd.date_range(start=fdf.index.min(), end=fdf.index.max(), freq='D')
                 fdf = fdf.reindex(all_dates, method='pad')
-                #fdf = fdf.reindex(all_dates).ffill()
 
-                fig1 = go.Figure()
-
-                # Bar 그래프에 zindex=1을 추가합니다
+                fig1 = make_subplots(specs=[[{"secondary_y": True}]])
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Prob1'],
-                    yaxis='y2',
                     opacity=1,
                     showlegend=False,
                     marker=dict(
                         color='rgb(245, 130, 32)',
                         line=dict(width=0)
-                    ),
-                    zindex=1  # zindex 추가
-                ))
-
+                    )
+                ), secondary_y=False)
                 fig1.add_trace(go.Bar(
                     x=fdf.index, y=fdf['Conviction'],
                     name='Conviction',
-                    yaxis='y2',
                     opacity=1,
                     marker=dict(
                         color='rgb(255, 217, 102)',
                         line=dict(width=0)
-                    ),
-                    zindex=1  # zindex 추가
-                ))
-
-                # Scatter (line) 그래프에 zindex=2를 추가하여 가장 위에 오도록 합니다
+                    )
+                ), secondary_y=False)
                 fig1.add_trace(go.Scatter(
                     x=fdf.index, y=fdf[fxnm],
                     mode='lines', name=f'{fxnm}',
-                    yaxis='y1',
                     line=dict(width=4, color='rgb(13, 45, 79)'),
-                    stackgroup=None,
-                    zindex=2  # zindex 추가
-                ))
+                    stackgroup=None
+                ), secondary_y=True)
 
                 fig1.update_layout(
-                    title=chart_title,
-                    xaxis=dict(title='DATE'),
-                    yaxis=dict(
-                        title=fxnm,
-                        side='left'
-                    ),
-                    yaxis2=dict(
-                        title='Conviction',
-                        overlaying='y',
-                        side='right'
-                    ),
                     barmode='overlay',
-                    bargap=0,
-                    template='plotly_dark',
+                    bargap=0.15,
+                    title=chart_title,
+                    xaxis_title='Date',
+                    yaxis_title='Prob/Conviction',
+                    yaxis2_title=f'{fxnm}',
                     legend=dict(
                         orientation='h',
                         yanchor='top',
@@ -2438,17 +2556,22 @@ if authentication_status:
                         x=0.5
                     )
                 )
+
+                fig1.update_yaxes(range=[0, max(fdf['Prob1'].max(), fdf['Conviction'].max()) * 1.1], secondary_y=False)
+                fig1.update_yaxes(range=[fdf[fxnm].min() * 0.9, fdf[fxnm].max() * 1.1], secondary_y=True)
+                fig1.update_traces(opacity=1, selector=dict(type='bar'))
+
                 return fig1
 
 
-            fig_USDKRW1, fig_USDKRW2 = fxgenfig1('B:I', 'USDKRW', 'Prob1', 'USDKRW: USD 강세 모델')
-            fig_KRWUSD1, fig_KRWUSD2 = fxgenfig1('O:V', 'USDKRW', 'Prob0', 'USDKRW: KRW 강세 모델')
-            fig_USDEUR1 = fxgenfig2('AJ:AO', 'USDEUR', 'USDEUR')
-            fig_USDGBP1 = fxgenfig2('AQ:AV', 'USDGBP', 'USDGBP')
-            fig_USDCNY1 = fxgenfig2('AX:BC', 'USDCNY', 'USDCNY')
-            fig_USDJPY1 = fxgenfig2('BE:BJ', 'USDJPY', 'USDJPY')
+            fig_USDKRW1, fig_USDKRW2 = fxgenfig1('USDKRW', 'Prob1', 'USDKRW: USD 강세 모델')
+            fig_KRWUSD1, fig_KRWUSD2 = fxgenfig1('KRWUSD', 'Prob0', 'USDKRW: KRW 강세 모델')
+            fig_USDEUR1 = fxgenfig2('USDEUR', 'USDEUR')
+            fig_USDGBP1 = fxgenfig2('USDGBP', 'USDGBP')
+            fig_USDCNY1 = fxgenfig2('USDCNY', 'USDCNY')
+            fig_USDJPY1 = fxgenfig2('USDJPY', 'USDJPY')
 
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns([2, 2, 1])
             with col1:
                 st.plotly_chart(fig_USDKRW1)
                 st.plotly_chart(fig_KRWUSD1)
@@ -2886,3 +3009,4 @@ elif authentication_status is False:
     st.error('Username or password is incorrect')
 elif authentication_status is None:
     st.warning('Please enter your username and password')
+
