@@ -242,6 +242,9 @@ with col1:
 
 if authentication_status:
 
+    st.sidebar.write("")
+    st.sidebar.write("")
+    st.sidebar.write("")
     st.sidebar.image(image_path, use_column_width=True, output_format='PNG')
     st.sidebar.write("")
     st.sidebar.markdown("<h1 style='font-size: 35px; font-weight: bold;'>QIS Square</h1>", unsafe_allow_html=True)
