@@ -314,7 +314,7 @@ if authentication_status:
             # st.markdown(html, unsafe_allow_html=True)
 
         elif selected_sub_menu == "PPT_QIS":
-            st.pdf(qispdfpath)
+            st.markdown(f'<iframe src="{qispdfpath}" width="700" height="500"></iframe>', unsafe_allow_html=True)
 
     if selected_main_menu == "DART공시정보 검색":
         if selected_sub_menu == "최근 공시정보 검색":
