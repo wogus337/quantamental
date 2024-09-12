@@ -25,7 +25,7 @@ from io import BytesIO
 from scipy.odr import ODR, Model, RealData
 from scipy.stats import linregress
 import itertools
-#from pdf2image import convert_from_path
+import os
 
 
 series_path = "data/streamlit_24.xlsx"
@@ -39,7 +39,7 @@ market_path = "data/streamlit_24_marketVV.xlsx"
 allo_path = "data/streamlit_24_allocation.xlsx"
 fds_path = "data/streamlit_24_fds.xlsx"
 pairres_path = "data/relativ_analysis_out_240830.csv"
-qispdfpath = "data/Quantamental Investment Strategy_2024.09.pdf"
+slidepath = "images/QIS_Sep24"
 image_path = "images/miraeasset.png"
 igimage_path = "images/usig.png"
 #
@@ -54,7 +54,7 @@ igimage_path = "images/usig.png"
 # allo_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_allocation.xlsx"
 # fds_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fds.xlsx"
 # pairres_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\relativ_analysis_out_240830.csv"
-# qispdfpath = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\Quantamental Investment Strategy_2024.09.pdf"
+# slidepath = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\QIS_Sep24"
 # image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
 # igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
 
@@ -315,16 +315,39 @@ if authentication_status:
             #         """
             # st.markdown(html, unsafe_allow_html=True)
 
-        # elif selected_sub_menu == "PPT_QIS":
-        #
-        #     def display_pdf(file_path):
-        #         images = convert_from_path(file_path)
-        #         for i, image in enumerate(images):
-        #             st.image(image, caption=f'Page {i + 1}', use_column_width=True)
-        #
-        #
-        #     qispdfpath = "data/Quantamental Investment Strategy_2024.09.pdf"
-        #     display_pdf(qispdfpath)
+        elif selected_sub_menu == "PPT_QIS":
+
+            image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".png")])
+            total_images = len(image_files)
+
+            if "current_image_index" not in st.session_state:
+                st.session_state.current_image_index = 0
+
+            st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
+
+            current_image_file = os.path.join(slidepath, image_files[st.session_state.current_image_index])
+            st.image(current_image_file)
+
+            # 화살표 버튼으로 이미지 넘기기
+            col1, col2, col3 = st.columns([1, 2, 1])
+
+            # 뒤로 가기 버튼
+            with col1:
+                if st.button("⬅️ Previous"):
+                    if st.session_state.current_image_index > 0:
+                        st.session_state.current_image_index -= 1
+
+            # 숫자 입력으로 이미지 선택
+            with col2:
+                image_num = st.number_input("Enter image number:", min_value=1, max_value=total_images,
+                                            value=st.session_state.current_image_index + 1)
+                st.session_state.current_image_index = image_num - 1
+
+            # 앞으로 가기 버튼
+            with col3:
+                if st.button("Next ➡️"):
+                    if st.session_state.current_image_index < total_images - 1:
+                        st.session_state.current_image_index += 1
 
     if selected_main_menu == "DART공시정보 검색":
         if selected_sub_menu == "최근 공시정보 검색":
