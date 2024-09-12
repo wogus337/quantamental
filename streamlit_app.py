@@ -247,8 +247,11 @@ if authentication_status:
     st.sidebar.markdown("<h1 style='font-size: 35px; font-weight: bold;'>QIS Square</h1>", unsafe_allow_html=True)
 
     # main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "Allocation", "시나리오"]
-    main_menu_options = ["Market", "Relative", "국면", "유사국면", "Macro 분석", "모델전망 & Signal", "DART공시정보 검색"]
+    main_menu_options = ["Main", "Market", "Relative", "국면", "유사국면", "Macro 분석", "모델전망 & Signal", "DART공시정보 검색"]
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
+
+    if selected_main_menu == "Main":
+        sub_menu_options = [""]
 
     if selected_main_menu == "DART공시정보 검색":
         sub_menu_options = ["최근 공시정보 검색"]
@@ -272,6 +275,27 @@ if authentication_status:
         sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "RankingModel", "FX", "FDS"]
 
     selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
+
+    if selected_main_menu == "Main":
+        st.title("Quantamental Investment Strategy - 메뉴설명")
+
+        html = """
+                <style>
+                    .custom-text {
+                        line-height: 1.2;
+                    }
+                </style>
+                <div class="custom-text">
+                    <p>Market: 금리, 환율, 주가지수 등의 현황 및 추이 조회</p>
+                    <p>Relative: 둘 이상 지표간의 상대적 흐름 파악</p>
+                    <p>국면: 퀀타멘탈운용본부에서 산출하는 Economic Cycle, Credit Cycle 조회</p>
+                    <p>유사국면: 월간 단위로 산출하는 유사국면 정보 조회</p>
+                    <p>Macro 분석: 매크로 지표와 가격 지표의 상관성 파악</p>
+                    <p>모델전망 & Signal: 퀀타멘탈운용본부의 AI/Quant 모델 기반 예측정보 및 모델산출물 조회</p>
+                    <p>DART공시정보 검색: 금감원 DART 공시자료 조회</p>      
+                </div>
+                """
+        st.markdown(html, unsafe_allow_html=True)
 
     if selected_main_menu == "DART공시정보 검색":
         if selected_sub_menu == "최근 공시정보 검색":
