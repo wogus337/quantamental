@@ -318,7 +318,7 @@ if authentication_status:
                     if st.session_state.current_image_index > 0:
                         st.session_state.current_image_index -= 1
             with col3:
-                image_num = st.number_input("Page: ", min_value=1, max_value=total_images,
+                image_num = st.number_input("", min_value=1, max_value=total_images,
                                             value=st.session_state.current_image_index + 1)
                 st.session_state.current_image_index = image_num - 1
             with col4:
