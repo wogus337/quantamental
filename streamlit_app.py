@@ -297,28 +297,11 @@ if authentication_status:
             st.subheader("모델전망 & Signal: 퀀타멘탈운용본부의 AI/Quant 모델 기반 예측정보 및 모델산출물 조회")
             st.subheader("DART공시정보 검색: 금감원 DART 공시자료 조회")
 
-            # html = """
-            #         <style>
-            #             .custom-text {
-            #                 line-height: 1.2;
-            #             }
-            #         </style>
-            #         <div class="custom-text">
-            #             <p>Market: 금리, 환율, 주가지수 등의 현황 및 추이 조회</p>
-            #             <p>Relative: 둘 이상 지표간의 상대적 흐름 파악</p>
-            #             <p>국면: 퀀타멘탈운용본부에서 산출하는 Economic Cycle, Credit Cycle 조회</p>
-            #             <p>유사국면: 월간 단위로 산출하는 유사국면 정보 조회</p>
-            #             <p>Macro 분석: 매크로 지표와 가격 지표의 상관성 파악</p>
-            #             <p>모델전망 & Signal: 퀀타멘탈운용본부의 AI/Quant 모델 기반 예측정보 및 모델산출물 조회</p>
-            #             <p>DART공시정보 검색: 금감원 DART 공시자료 조회</p>
-            #         </div>
-            #         """
-            # st.markdown(html, unsafe_allow_html=True)
-
         elif selected_sub_menu == "PPT_QIS":
 
             image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".png")])
             total_images = len(image_files)
+            st.write(total_images)
 
             if "current_image_index" not in st.session_state:
                 st.session_state.current_image_index = 0
