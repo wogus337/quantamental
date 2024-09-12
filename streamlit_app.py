@@ -299,7 +299,7 @@ if authentication_status:
 
         elif selected_sub_menu == "PPT_QIS":
 
-            image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".png")])
+            image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".PNG")])
             total_images = len(image_files)
             st.write(total_images)
 
