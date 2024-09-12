@@ -318,13 +318,11 @@ if authentication_status:
                     if st.session_state.current_image_index > 0:
                         st.session_state.current_image_index -= 1
 
-            # 숫자 입력으로 이미지 선택
             with col2:
-                image_num = st.number_input("#", min_value=1, max_value=total_images,
+                image_num = st.number_input("", min_value=1, max_value=total_images,
                                             value=st.session_state.current_image_index + 1)
                 st.session_state.current_image_index = image_num - 1
 
-            # 앞으로 가기 버튼
             with col3:
                 if st.button("Next ➡️"):
                     if st.session_state.current_image_index < total_images - 1:
