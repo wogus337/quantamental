@@ -37,7 +37,7 @@ market_path = "data/streamlit_24_marketVV.xlsx"
 allo_path = "data/streamlit_24_allocation.xlsx"
 fds_path = "data/streamlit_24_fds.xlsx"
 pairres_path = "data/relativ_analysis_out_240830.csv"
-qispdfpath = "Quantamental Investment Strategy_2024.09.pdf"
+qispdfpath = "data/Quantamental Investment Strategy_2024.09.pdf"
 image_path = "images/miraeasset.png"
 igimage_path = "images/usig.png"
 #
@@ -285,6 +285,7 @@ if authentication_status:
         if sub_menu_options == "Main":
 
             st.title("Quantamental Investment Strategy - 메뉴설명")
+            st.write("")
             st.write("")
             st.subheader("Market: 금리, 환율, 주가지수 등의 현황 및 추이 조회")
             st.subheader("Relative: 둘 이상 지표간의 상대적 흐름 파악")
