@@ -308,24 +308,24 @@ if authentication_status:
             st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
             current_image_file = os.path.join(slidepath, image_files[st.session_state.current_image_index])
 
-            col1, col2 = st.columns([9, 1])
+            col1, col2 = st.columns([7, 3])
             with col1:
                 st.image(current_image_file, use_column_width=True, output_format='PNG')
 
-            col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 6, 1])
-            with col1:
-                if st.button("⬅️ Previous"):
-                    if st.session_state.current_image_index > 0:
-                        st.session_state.current_image_index -= 1
-            with col2:
-                if st.button("Next ➡️"):
-                    if st.session_state.current_image_index < total_images - 1:
-                        st.session_state.current_image_index += 1
-
-            with col5:
-                image_num = st.number_input("Page: ", min_value=1, max_value=total_images,
-                                            value=st.session_state.current_image_index + 1)
-                st.session_state.current_image_index = image_num - 1
+            # col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 6, 1])
+            # with col1:
+            #     if st.button("⬅️ Previous"):
+            #         if st.session_state.current_image_index > 0:
+            #             st.session_state.current_image_index -= 1
+            # with col2:
+            #     if st.button("Next ➡️"):
+            #         if st.session_state.current_image_index < total_images - 1:
+            #             st.session_state.current_image_index += 1
+            #
+            # with col5:
+            #     image_num = st.number_input("Page: ", min_value=1, max_value=total_images,
+            #                                 value=st.session_state.current_image_index + 1)
+            #     st.session_state.current_image_index = image_num - 1
 
     if selected_main_menu == "DART공시정보 검색":
         if selected_sub_menu == "최근 공시정보 검색":
