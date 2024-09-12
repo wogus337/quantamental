@@ -282,7 +282,7 @@ if authentication_status:
     selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 
     if selected_main_menu == "Main":
-        if sub_menu_options == "Main":
+        if selected_sub_menu == "Main":
 
             st.title("Quantamental Investment Strategy - 메뉴설명")
             st.write("")
@@ -313,7 +313,7 @@ if authentication_status:
             #         """
             # st.markdown(html, unsafe_allow_html=True)
 
-        elif sub_menu_options == "PPT_QIS":
+        elif selected_sub_menu == "PPT_QIS":
             st.pdf(qispdfpath)
 
     if selected_main_menu == "DART공시정보 검색":
