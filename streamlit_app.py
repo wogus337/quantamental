@@ -318,7 +318,7 @@ if authentication_status:
             with col1:
                 st.image(current_image_file, use_column_width=True, output_format='PNG')
 
-            col1, col2, col3 = st.columns([1, 4, 1, 4])
+            col1, col2, col3, col4 = st.columns([1, 4, 1, 4])
             with col1:
                 if st.button("⬅️ Previous"):
                     if st.session_state.current_image_index > 0:
