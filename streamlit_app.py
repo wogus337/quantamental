@@ -312,20 +312,20 @@ if authentication_status:
             with col1:
                 st.image(current_image_file, use_column_width=True, output_format='PNG')
 
-            # col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 6, 1])
-            # with col1:
-            #     if st.button("⬅️ Previous"):
-            #         if st.session_state.current_image_index > 0:
-            #             st.session_state.current_image_index -= 1
-            # with col2:
-            #     if st.button("Next ➡️"):
-            #         if st.session_state.current_image_index < total_images - 1:
-            #             st.session_state.current_image_index += 1
-            #
-            # with col5:
-            #     image_num = st.number_input("Page: ", min_value=1, max_value=total_images,
-            #                                 value=st.session_state.current_image_index + 1)
-            #     st.session_state.current_image_index = image_num - 1
+            col1, col2, col3, col4, col5 = st.columns([3, 1, 2, 1, 3])
+            with col2:
+                if st.button("⬅️ Previous"):
+                    if st.session_state.current_image_index > 0:
+                        st.session_state.current_image_index -= 1
+            with col3:
+                image_num = st.number_input("Page: ", min_value=1, max_value=total_images,
+                                            value=st.session_state.current_image_index + 1)
+                st.session_state.current_image_index = image_num - 1
+            with col4:
+                if st.button("Next ➡️"):
+                    if st.session_state.current_image_index < total_images - 1:
+                        st.session_state.current_image_index += 1
+
 
     if selected_main_menu == "DART공시정보 검색":
         if selected_sub_menu == "최근 공시정보 검색":
