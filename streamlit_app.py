@@ -299,22 +299,20 @@ if authentication_status:
 
         elif selected_sub_menu == "PPT_QIS":
 
-            image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".PNG")])
+            image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".PNG")], key=lambda x: int(os.path.splitext(x)[0]))
             total_images = len(image_files)
-            st.write(total_images)
 
             if "current_image_index" not in st.session_state:
                 st.session_state.current_image_index = 0
 
             st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
-
             current_image_file = os.path.join(slidepath, image_files[st.session_state.current_image_index])
-            st.image(current_image_file)
 
-            # 화살표 버튼으로 이미지 넘기기
-            col1, col2, col3 = st.columns([1, 2, 1])
+            col1, col2 = st.columns([9, 1])
+            with col1:
+                st.image(current_image_file)
 
-            # 뒤로 가기 버튼
+            col1, col2, col3, col4 = st.columns([1, 1, 1, 7])
             with col1:
                 if st.button("⬅️ Previous"):
                     if st.session_state.current_image_index > 0:
@@ -322,7 +320,7 @@ if authentication_status:
 
             # 숫자 입력으로 이미지 선택
             with col2:
-                image_num = st.number_input("Enter image number:", min_value=1, max_value=total_images,
+                image_num = st.number_input("#", min_value=1, max_value=total_images,
                                             value=st.session_state.current_image_index + 1)
                 st.session_state.current_image_index = image_num - 1
 
