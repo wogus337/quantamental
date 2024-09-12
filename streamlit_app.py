@@ -26,33 +26,33 @@ from scipy.stats import linregress
 import itertools
 
 
-series_path = "data/streamlit_24.xlsx"
-cylfile_path = "data/streamlit_24_cycle.xlsx"
-simfile_path = "data/streamlit_24_sim.xlsx"
-fx_path = "data/streamlit_24_fx.xlsx"
-model_path = "data/streamlit_24_signal.xlsx"
-macro_path = "data/streamlit_24_macro.xlsx"
-usig_path = "data/streamlit_24_usigpick.xlsx"
-market_path = "data/streamlit_24_marketVV.xlsx"
-allo_path = "data/streamlit_24_allocation.xlsx"
-fds_path = "data/streamlit_24_fds.xlsx"
-pairres_path = "data/relativ_analysis_out_240830.csv"
-image_path = "images/miraeasset.png"
-igimage_path = "images/usig.png"
+# series_path = "data/streamlit_24.xlsx"
+# cylfile_path = "data/streamlit_24_cycle.xlsx"
+# simfile_path = "data/streamlit_24_sim.xlsx"
+# fx_path = "data/streamlit_24_fx.xlsx"
+# model_path = "data/streamlit_24_signal.xlsx"
+# macro_path = "data/streamlit_24_macro.xlsx"
+# usig_path = "data/streamlit_24_usigpick.xlsx"
+# market_path = "data/streamlit_24_marketVV.xlsx"
+# allo_path = "data/streamlit_24_allocation.xlsx"
+# fds_path = "data/streamlit_24_fds.xlsx"
+# pairres_path = "data/relativ_analysis_out_240830.csv"
+# image_path = "images/miraeasset.png"
+# igimage_path = "images/usig.png"
 #
-# series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
-# cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
-# simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
-# fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
-# model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
-# macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
-# usig_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_usigpick.xlsx"
-# market_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_marketVV.xlsx"
-# allo_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_allocation.xlsx"
-# fds_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fds.xlsx"
-# pairres_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\relativ_analysis_out_240830.csv"
-# image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
-# igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
+series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
+cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
+simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
+fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
+model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
+macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
+usig_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_usigpick.xlsx"
+market_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_marketVV.xlsx"
+allo_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_allocation.xlsx"
+fds_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fds.xlsx"
+pairres_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\relativ_analysis_out_240830.csv"
+image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
+igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
 
 
 def get_closest_business_day(date, df):
@@ -1029,12 +1029,23 @@ if authentication_status:
             dffil_lst.insert(0, 'Pair', dffil_lst['Col_X'] + ' - ' + dffil_lst['Col_Y'])
 
             st.dataframe(dffil)
+            html = """
+                                <style>
+                                    .custom-text {
+                                        line-height: 1.2;
+                                    }
+                                </style>
+                                <div class="custom-text">
+                                    <p>Col_X, Col_Y가 FX이면 rvalue는 ratio, 금리이면 diff(Col_X - Col_Y)</p>
+                                    <p>rvalue가 +(-) 이면서 upper(lower)보다 높다면(낮다면), Col_X(Col_Y)의 레벨이 abnormally high</p>
+                                    <p>ortho_resid도 같은 해석</p>                        
+                                </div>
+                                """
+            st.markdown(html, unsafe_allow_html=True)
             st.write("")
 
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                last_n = st.number_input(label="관찰기간", value=52, step=1)
-            with col2:
                 na = st.radio(label="분석기간", options=["26", "52", "104", "156"], horizontal=True)
 
             ana_n = int(na)
@@ -1049,19 +1060,32 @@ if authentication_status:
             st.dataframe(dffil_x)
             st.write("")
 
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                last_n = st.number_input(label="관찰기간", value=52, step=1)
+
             sel_case = pair0[pair0['Pair'] == sel_pairlst]
             x_col = sel_case['Col_X'].iloc[0]
             y_col = sel_case['Col_Y'].iloc[0]
+
+            chgopt = 1 if x_col in df2.columns else 2
+
             dfa = dfx[['DATE', x_col, y_col]]
 
             df_ratio = dfa.copy()
-            df_ratio['ratio'] = df_ratio.iloc[:, 1] / df_ratio.iloc[:, 2]
-            df_ratio['ratio_upper'] = df_ratio.iloc[:, 3].rolling(window=ana_n).mean() + 2 * df_ratio.iloc[:,
-                                                                                             3].rolling(
-                window=ana_n).std()
-            df_ratio['ratio_lower'] = df_ratio.iloc[:, 3].rolling(window=ana_n).mean() - 2 * df_ratio.iloc[:,
-                                                                                             3].rolling(
-                window=ana_n).std()
+            if chgopt == 1:
+                df_ratio['ratio'] = df_ratio.iloc[:, 1] / df_ratio.iloc[:, 2]
+                df_ratio['ratio_upper'] = (df_ratio.iloc[:, 3].rolling(window=ana_n).mean()
+                                           + 2 * df_ratio.iloc[:, 3].rolling(window=ana_n).std())
+                df_ratio['ratio_lower'] = (df_ratio.iloc[:, 3].rolling(window=ana_n).mean()
+                                           - 2 * df_ratio.iloc[:, 3].rolling(window=ana_n).std())
+            elif chgopt == 2:
+                df_ratio['diff'] = df_ratio.iloc[:, 1] - df_ratio.iloc[:, 2]
+                df_ratio['diff_upper'] = (df_ratio.iloc[:, 3].rolling(window=ana_n).mean()
+                                          + 2 * df_ratio.iloc[:, 3].rolling(window=ana_n).std())
+                df_ratio['diff_lower'] = (df_ratio.iloc[:, 3].rolling(window=ana_n).mean()
+                                          - 2 * df_ratio.iloc[:, 3].rolling(window=ana_n).std())
+
             f_ratio = df_ratio.tail(last_n)
 
             df_ortho = dfa.copy()
@@ -1091,7 +1115,7 @@ if authentication_status:
                 intercept = output.beta[1]
                 slope = output.beta[0]
                 dfr['pred'] = dfr.iloc[:, 1] * slope + intercept
-                dfr['ortho_resid'] = dfr.iloc[:, 2] - dfr['pred']
+                dfr['ortho_resid'] = dfr['pred'] - dfr.iloc[:, 2]
                 dfr['ortho_upper'] = dfr['ortho_resid'].mean() + 2 * dfr['ortho_resid'].std()
                 dfr['ortho_lower'] = dfr['ortho_resid'].mean() - 2 * dfr['ortho_resid'].std()
                 dfr['corr'] = corr
@@ -1104,8 +1128,13 @@ if authentication_status:
             f_ortho = pd.concat(f_ortho, ignore_index=True)
 
             f_final = pd.merge(f_ratio, f_ortho, on='DATE', how='inner')
-            f_final = f_final[['DATE', x_col, y_col, 'ratio_lower', 'ratio', 'ratio_upper',
-                               'ortho_lower', 'ortho_resid', 'ortho_upper']]
+
+            if chgopt == 1:
+                f_final = f_final[['DATE', x_col, y_col, 'ratio_lower', 'ratio', 'ratio_upper',
+                                   'ortho_lower', 'ortho_resid', 'ortho_upper']]
+            if chgopt == 2:
+                f_final = f_final[['DATE', x_col, y_col, 'diff_lower', 'diff', 'diff_upper',
+                                   'ortho_lower', 'ortho_resid', 'ortho_upper']]
 
             df = f_final.copy()
 
@@ -1115,7 +1144,7 @@ if authentication_status:
             fig1.add_trace(go.Scatter(x=df['DATE'], y=df[y_col], mode='lines', name=y_col, yaxis='y2',
                                       line=dict(color='rgb(13, 45, 79)')))
             fig1.update_layout(
-                title=f"f{x_col} & {y_col}",
+                title=f"{x_col} & {y_col}",
                 xaxis=dict(title='DATE'),
                 yaxis=dict(title=x_col, side='left'),
                 yaxis2=dict(title=y_col, side='right', overlaying='y', anchor='x')
@@ -1134,14 +1163,24 @@ if authentication_status:
                                       line=dict(color='rgb(0, 0, 0)', width=2)))
             fig2.update_layout(title="Scatter Plot", xaxis_title=x_col, yaxis_title=y_col)
 
-            fig3 = go.Figure()
-            fig3.add_trace(go.Scatter(x=df['DATE'], y=df['ratio_lower'], mode='lines', name='ratio_lower',
-                                      line=dict(color='rgb(13, 45, 79)')))
-            fig3.add_trace(go.Scatter(x=df['DATE'], y=df['ratio'], mode='lines', name='ratio',
-                                      line=dict(width=5, color='rgb(245, 130, 32)')))
-            fig3.add_trace(go.Scatter(x=df['DATE'], y=df['ratio_upper'], mode='lines', name='ratio_upper',
-                                      line=dict(color='rgb(13, 45, 79)')))
-            fig3.update_layout(title="Ratio", xaxis_title='DATE')
+            if chgopt == 1:
+                fig3 = go.Figure()
+                fig3.add_trace(go.Scatter(x=df['DATE'], y=df['ratio_lower'], mode='lines', name='ratio_lower',
+                                          line=dict(color='rgb(13, 45, 79)')))
+                fig3.add_trace(go.Scatter(x=df['DATE'], y=df['ratio'], mode='lines', name='ratio',
+                                          line=dict(width=5, color='rgb(245, 130, 32)')))
+                fig3.add_trace(go.Scatter(x=df['DATE'], y=df['ratio_upper'], mode='lines', name='ratio_upper',
+                                          line=dict(color='rgb(13, 45, 79)')))
+                fig3.update_layout(title="Ratio", xaxis_title='DATE')
+            elif chgopt == 2:
+                fig3 = go.Figure()
+                fig3.add_trace(go.Scatter(x=df['DATE'], y=df['diff_lower'], mode='lines', name='ratio_lower',
+                                          line=dict(color='rgb(13, 45, 79)')))
+                fig3.add_trace(go.Scatter(x=df['DATE'], y=df['diff'], mode='lines', name='ratio',
+                                          line=dict(width=5, color='rgb(245, 130, 32)')))
+                fig3.add_trace(go.Scatter(x=df['DATE'], y=df['diff_upper'], mode='lines', name='ratio_upper',
+                                          line=dict(color='rgb(13, 45, 79)')))
+                fig3.update_layout(title="Diff", xaxis_title='DATE')
 
             fig4 = go.Figure()
             fig4.add_trace(go.Scatter(x=df['DATE'], y=df['ortho_lower'], mode='lines', name='ortho_lower',
