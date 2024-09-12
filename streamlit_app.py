@@ -20,10 +20,12 @@ from sklearn.linear_model import LinearRegression
 import requests
 import zipfile
 import xml.etree.ElementTree as ET
+import io
 from io import BytesIO
 from scipy.odr import ODR, Model, RealData
 from scipy.stats import linregress
 import itertools
+from pdf2image import convert_from_path
 
 
 series_path = "data/streamlit_24.xlsx"
@@ -314,7 +316,13 @@ if authentication_status:
             # st.markdown(html, unsafe_allow_html=True)
 
         elif selected_sub_menu == "PPT_QIS":
-            st.markdown(f'<iframe src="{qispdfpath}" width="700" height="500"></iframe>', unsafe_allow_html=True)
+
+            def display_pdf(file_path):
+                images = convert_from_path(file_path)
+                for i, image in enumerate(images):
+                    st.image(image, caption=f'Page {i + 1}', use_column_width=True)
+
+            display_pdf(qispdfpath)
 
     if selected_main_menu == "DART공시정보 검색":
         if selected_sub_menu == "최근 공시정보 검색":
