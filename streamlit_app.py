@@ -308,7 +308,7 @@ if authentication_status:
             st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
             current_image_file = os.path.join(slidepath, image_files[st.session_state.current_image_index])
 
-            col1, col2 = st.columns([7, 3])
+            col1, col2 = st.columns([6, 4])
             with col1:
                 st.image(current_image_file, use_column_width=True, output_format='PNG')
 
