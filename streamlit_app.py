@@ -299,7 +299,8 @@ if authentication_status:
 
         elif selected_sub_menu == "PPT_QIS":
 
-            image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".PNG")], key=lambda x: int(os.path.splitext(x)[0]))
+            image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".PNG")],
+                                 key=lambda x: int(os.path.splitext(x)[0]))
             total_images = len(image_files)
 
             if "current_image_index" not in st.session_state:
@@ -317,16 +318,10 @@ if authentication_status:
                 if st.button("⬅️ Previous"):
                     if st.session_state.current_image_index > 0:
                         st.session_state.current_image_index -= 1
-                        current_image_file = os.path.join(slidepath,
-                                                          image_files[st.session_state.current_image_index])
-                        st.image(current_image_file, use_column_width=True, output_format='PNG')
             with col3:
                 if st.button("Next ➡️"):
                     if st.session_state.current_image_index < total_images - 1:
                         st.session_state.current_image_index += 1
-                        current_image_file = os.path.join(image_folder,
-                                                          image_files[st.session_state.current_image_index])
-                        st.image(current_image_file, use_column_width=True, output_format='PNG')
 
     if selected_main_menu == "DART공시정보 검색":
         if selected_sub_menu == "최근 공시정보 검색":
