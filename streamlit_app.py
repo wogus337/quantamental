@@ -312,7 +312,8 @@ if authentication_status:
                     st.session_state.current_image_index -= 1
 
 
-            def go_to_page(page_number):
+            def go_to_page():
+                page_number = st.session_state.page_number
                 if 1 <= page_number <= len(st.session_state.image_files):
                     st.session_state.current_image_index = page_number - 1
 
@@ -329,12 +330,11 @@ if authentication_status:
 
                 col1, col2 = st.columns([3, 1])
                 with col1:
-                    st.write(f"현재 페이지: {st.session_state.current_image_index + 1} / 전체 페이지: {total_images}")
+                    st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
                 with col2:
-                    page_number = st.number_input("페이지 입력", min_value=1, max_value=total_images,
-                                                  value=st.session_state.current_image_index + 1, step=1)
-                    if st.button("이동"):
-                        go_to_page(page_number)
+                    st.number_input("", min_value=1, max_value=total_images,
+                                    value=1, step=1, key="page_number",
+                                    on_change=go_to_page)
 
                 current_image_file = os.path.join(slidepath,
                                                   st.session_state.image_files[st.session_state.current_image_index])
