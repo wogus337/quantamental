@@ -299,31 +299,45 @@ if authentication_status:
 
         elif selected_sub_menu == "PPT_QIS":
 
-            image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".PNG")],
-                                 key=lambda x: int(os.path.splitext(x)[0]))
-            total_images = len(image_files)
+            def load_images(slidepath):
+                image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".PNG")],
+                                     key=lambda x: int(os.path.splitext(x)[0]))
+                return image_files
 
-            if "current_image_index" not in st.session_state:
-                st.session_state.current_image_index = 0
 
-            st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
-            current_image_file = os.path.join(slidepath, image_files[st.session_state.current_image_index])
+            def change_image(direction):
+                if direction == "next" and st.session_state.current_image_index < len(st.session_state.image_files) - 1:
+                    st.session_state.current_image_index += 1
+                elif direction == "previous" and st.session_state.current_image_index > 0:
+                    st.session_state.current_image_index -= 1
 
-            col1, col2 = st.columns([6, 4])
-            with col1:
-                st.image(current_image_file, use_column_width=True, output_format='PNG')
 
-            col1, col2, col3, col4 = st.columns([1, 4, 1, 4])
-            with col1:
-                if st.button("⬅️ Previous"):
-                    if st.session_state.current_image_index > 0:
-                        st.session_state.current_image_index -= 1
-                        st.experimental_rerun()
-            with col3:
-                if st.button("Next ➡️"):
-                    if st.session_state.current_image_index < total_images - 1:
-                        st.session_state.current_image_index += 1
-                        st.experimental_rerun()
+            def main(slidepath=slidepath):
+
+                if "image_files" not in st.session_state:
+                    st.session_state.image_files = load_images(slidepath)
+
+                if "current_image_index" not in st.session_state:
+                    st.session_state.current_image_index = 0
+
+                total_images = len(st.session_state.image_files)
+                st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
+
+                current_image_file = os.path.join(slidepath,
+                                                  st.session_state.image_files[st.session_state.current_image_index])
+
+                col1, col2 = st.columns([6, 4])
+                with col1:
+                    st.image(current_image_file, use_column_width=True, output_format='PNG')
+
+                col1, col2, col3, col4 = st.columns([1, 4, 1, 4])
+                with col1:
+                    st.button("⬅️ Previous", on_click=change_image, args=("previous",))
+                with col3:
+                    st.button("Next ➡️", on_click=change_image, args=("next",))
+
+            if __name__ == "__main__":
+                main()
 
     if selected_main_menu == "DART공시정보 검색":
         if selected_sub_menu == "최근 공시정보 검색":
