@@ -340,8 +340,8 @@ if authentication_status:
 
                 image = Image.open(current_image_file)
                 width, height = image.size
-                new_width = int(width * 1.2)
-                new_height = int(height * 1.2)
+                new_width = int(width * 1.5)
+                new_height = int(height * 1.5)
                 image_resized = image.resize((new_width, new_height))
 
                 col1, col2 = st.columns([6, 4])
