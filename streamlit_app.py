@@ -312,7 +312,12 @@ if authentication_status:
                     st.session_state.current_image_index -= 1
 
 
-            def main(slidepath=slidepath):
+            def go_to_page(page_number):
+                if 1 <= page_number <= len(st.session_state.image_files):
+                    st.session_state.current_image_index = page_number - 1
+
+
+            def main(slidepath = slidepath):
 
                 if "image_files" not in st.session_state:
                     st.session_state.image_files = load_images(slidepath)
@@ -321,7 +326,15 @@ if authentication_status:
                     st.session_state.current_image_index = 0
 
                 total_images = len(st.session_state.image_files)
-                st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
+
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.write(f"현재 페이지: {st.session_state.current_image_index + 1} / 전체 페이지: {total_images}")
+                with col2:
+                    page_number = st.number_input("페이지 입력", min_value=1, max_value=total_images,
+                                                  value=st.session_state.current_image_index + 1, step=1)
+                    if st.button("이동"):
+                        go_to_page(page_number)
 
                 current_image_file = os.path.join(slidepath,
                                                   st.session_state.image_files[st.session_state.current_image_index])
