@@ -344,12 +344,12 @@ if authentication_status:
                 new_height = int(height * 1.5)
                 image_resized = image.resize((new_width, new_height))
 
-                col1, col2 = st.columns([6, 4])
+                col1, col2 = st.columns([8, 2])
                 with col1:
                     #st.image(current_image_file, use_column_width=True, output_format='PNG')
                     st.image(image_resized, use_column_width=True)
 
-                col1, col2, col3, col4 = st.columns([1, 4, 1, 4])
+                col1, col2, col3, col4 = st.columns([2, 4, 2, 2])
                 with col1:
                     st.button("⬅️ Previous", on_click=change_image, args=("previous",))
                 with col3:
