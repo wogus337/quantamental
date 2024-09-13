@@ -1147,7 +1147,7 @@ if authentication_status:
 
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                last_n = st.number_input(label="관찰기간", value=52, step=1)
+                last_n = st.number_input(label="관찰기간", value=na, step=1)
 
             sel_case = pair0[pair0['Pair'] == sel_pairlst]
             x_col = sel_case['Col_X'].iloc[0]
