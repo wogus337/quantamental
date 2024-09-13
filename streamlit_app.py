@@ -1178,6 +1178,10 @@ if authentication_status:
             df_ortho = df_ortho.sort_values(by='DATE', ascending=False)
 
             f_ortho = []
+
+            def linear_function(beta, x):
+                return beta[0] * x + beta[1]
+
             for i in range(last_n - 1, -1, -1):
                 ana_s = i + ana_n
                 dfr = df_ortho.iloc[i:ana_s]
@@ -1187,11 +1191,6 @@ if authentication_status:
 
                 corr_m = np.corrcoef(x, y)
                 corr = corr_m[0, 1]
-
-
-                def linear_function(beta, x):
-                    return beta[0] * x + beta[1]
-
 
                 real_data = RealData(x, y)
                 linear_model = Model(linear_function)
@@ -1235,7 +1234,18 @@ if authentication_status:
                 yaxis2=dict(title=y_col, side='right', overlaying='y', anchor='x')
             )
 
-            slope, intercept, r_value, p_value, std_err = linregress(df[x_col], df[y_col])
+            #slope, intercept, r_value, p_value, std_err = linregress(df[x_col], df[y_col])
+            #regression_line_x = df[x_col]
+            #regression_line_y = slope * regression_line_x + intercept
+
+            lx = df[x_col].values
+            ly = df[y_col].values
+            real_data = RealData(lx, ly)
+            linear_model = Model(linear_function)
+            odr = ODR(real_data, linear_model, beta0=[1., 0.])  # 초기값 beta0: [기울기, 절편]
+            output = odr.run()
+            intercept = output.beta[1]
+            slope = output.beta[0]
             regression_line_x = df[x_col]
             regression_line_y = slope * regression_line_x + intercept
 
