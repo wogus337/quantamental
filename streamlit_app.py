@@ -331,8 +331,8 @@ if authentication_status:
                 col1, col2, col3 = st.columns([2, 2, 6])
                 with col1:
                     st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
-                    st.number_input("", min_value=1, max_value=total_images, value=1, step=1, key="page_number",
-                                    on_change=go_to_page)                            
+                    st.number_input("페이지 이동: ", min_value=1, max_value=total_images, value=1, step=1, key="page_number",
+                                    on_change=go_to_page)
 
                 current_image_file = os.path.join(slidepath,
                                                   st.session_state.image_files[st.session_state.current_image_index])
