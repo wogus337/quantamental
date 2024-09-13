@@ -26,6 +26,7 @@ from scipy.odr import ODR, Model, RealData
 from scipy.stats import linregress
 import itertools
 import os
+from PIL import Image
 
 
 series_path = "data/streamlit_24.xlsx"
@@ -337,10 +338,16 @@ if authentication_status:
                 current_image_file = os.path.join(slidepath,
                                                   st.session_state.image_files[st.session_state.current_image_index])
 
+                image = Image.open(current_image_file)
+                width, height = image.size
+                new_width = int(width * 1.2)
+                new_height = int(height * 1.2)
+                image_resized = image.resize((new_width, new_height))
+
                 col1, col2 = st.columns([6, 4])
                 with col1:
                     #st.image(current_image_file, use_column_width=True, output_format='PNG')
-                    st.image(current_image_file, use_column_width=False, width=int(col_width * 1.2))
+                    st.image(image_resized, use_column_width=True)
 
                 col1, col2, col3, col4 = st.columns([1, 4, 1, 4])
                 with col1:
