@@ -339,7 +339,8 @@ if authentication_status:
 
                 col1, col2 = st.columns([6, 4])
                 with col1:
-                    st.image(current_image_file, use_column_width=True, output_format='PNG')
+                    #st.image(current_image_file, use_column_width=True, output_format='PNG')
+                    st.image(current_image_file, use_column_width=False, width=int(col_width * 1.2))
 
                 col1, col2, col3, col4 = st.columns([1, 4, 1, 4])
                 with col1:
