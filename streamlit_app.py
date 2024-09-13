@@ -328,7 +328,7 @@ if authentication_status:
 
                 total_images = len(st.session_state.image_files)
 
-                col1, col2 = st.columns([3, 1])
+                col1, col2, col3, col4 = st.columns([1, 1, 4, 4])
                 with col1:
                     st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
                 with col2:
