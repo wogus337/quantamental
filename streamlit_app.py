@@ -328,13 +328,20 @@ if authentication_status:
 
                 total_images = len(st.session_state.image_files)
 
-                col1, col2, col3, col4 = st.columns([1, 1, 4, 4])
+                col1, col2, col3 = st.columns([4, 2, 4])
                 with col1:
-                    st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
-                with col2:
-                    st.number_input("", min_value=1, max_value=total_images,
-                                    value=1, step=1, key="page_number",
-                                    on_change=go_to_page)
+                    # HTML과 CSS를 사용하여 레이아웃 조정
+                    html_content = f"""
+                    <div style="display: flex; align-items: center;">
+                        <div style="margin-right: 10px;">
+                            <p>{st.session_state.current_image_index + 1} of {total_images}</p>
+                        </div>
+                        <div>
+                            {st.number_input("", min_value=1, max_value=total_images, value=1, step=1, key="page_number", on_change=go_to_page)}
+                        </div>
+                    </div>
+                    """
+                    st.markdown(html_content, unsafe_allow_html=True)
 
                 current_image_file = os.path.join(slidepath,
                                                   st.session_state.image_files[st.session_state.current_image_index])
