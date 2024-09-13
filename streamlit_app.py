@@ -330,11 +330,28 @@ if authentication_status:
 
                 col1, col2, col3 = st.columns([4, 2, 4])
                 with col1:
-                    # HTML과 CSS를 사용하여 레이아웃 조정
+                    st.markdown("""
+                    <style>
+                    .container {
+                        display: flex;
+                        align-items: center;
+                        justify-content: flex-start;
+                    }
+                    .text {
+                        margin-right: 20px;
+                        min-width: 80px;  /* 텍스트 영역의 최소 너비 설정 */
+                    }
+                    .stNumberInput {
+                        width: 80px;  /* 숫자 입력 필드의 너비 설정 */
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+
+                    # HTML을 사용하여 요소 배치
                     html_content = f"""
-                    <div style="display: flex; align-items: center;">
-                        <div style="margin-right: 10px;">
-                            <p>{st.session_state.current_image_index + 1} of {total_images}</p>
+                    <div class="container">
+                        <div class="text">
+                            {st.session_state.current_image_index + 1} of {total_images}
                         </div>
                         <div>
                             {st.number_input("", min_value=1, max_value=total_images, value=1, step=1, key="page_number", on_change=go_to_page)}
