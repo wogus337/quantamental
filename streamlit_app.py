@@ -38,6 +38,8 @@ market_path = "data/streamlit_24_marketVV.xlsx"
 allo_path = "data/streamlit_24_allocation.xlsx"
 fds_path = "data/streamlit_24_fds.xlsx"
 pairres_path = "data/relativ_analysis_out_240830.csv"
+nowgdp_path = "data/gdpnowout.csv"
+nowinfl_path = "data/inflout.csv"
 slidepath = "images/QIS_Sep24"
 image_path = "images/miraeasset.png"
 igimage_path = "images/usig.png"
@@ -53,6 +55,8 @@ igimage_path = "images/usig.png"
 # allo_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_allocation.xlsx"
 # fds_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fds.xlsx"
 # pairres_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\relativ_analysis_out_240830.csv"
+# nowgdp_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\gdpnowout.csv"
+# nowinfl_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\inflout.csv"
 # slidepath = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\QIS_Sep24"
 # image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
 # igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
@@ -275,7 +279,8 @@ if authentication_status:
         sub_menu_options = ["유사국면분석"]
 
     elif selected_main_menu == "Macro 분석":
-        sub_menu_options = ["Macro Driver", "Macro: Actual vs. Survey"]
+        sub_menu_options = ["Macro Driver", "Macro: Actual vs. Survey", "Nowcast - GDP", "Nowcast - Inflation",
+                            "Nowcast - US CPI"]
 
     elif selected_main_menu == "모델전망 & Signal":
         sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "RankingModel", "FX", "FDS"]
@@ -1780,7 +1785,160 @@ if authentication_status:
                 st.plotly_chart(fig_OIL)
 
     elif selected_main_menu == "Macro 분석":
-        if selected_sub_menu == "Macro Driver":
+
+        if selected_sub_menu == "Nowcast - GDP":
+
+            st.title("Nowcast - GDP")
+
+            df = pd.read_csv(nowgdp_path)
+            df['Date'] = pd.to_datetime(df['Date'])
+            sel_cols = [col for col in df.columns if col != 'Date']
+            sel_colx = st.multiselect(
+                "Select:",
+                sel_cols,
+                default=sel_cols
+            )
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                sdt = st.date_input("Start", min_value=df['Date'].min(), max_value=df['Date'].max(),
+                                    value=df['Date'].min())
+            with col2:
+                edt = st.date_input("End", min_value=df['Date'].min(), max_value=df['Date'].max(),
+                                    value=df['Date'].max())
+
+            dfa = df[['Date'] + sel_colx]
+            dfa = dfa[(dfa['Date'] >= pd.to_datetime(sdt)) & (dfa['Date'] <= pd.to_datetime(edt))]
+            columns = st.columns(4)
+            for i, col in enumerate(sel_colx):
+                xdf = dfa[['Date', col]]
+                xdf = xdf.dropna()
+                fig1 = go.Figure()
+                fig1.add_trace(
+                    go.Scatter(x=xdf['Date'], y=xdf[col], name=col, mode='lines', line=dict(color='rgb(245, 130, 32)')))
+                fig1.update_layout(
+                    xaxis_title='Date',
+                    yaxis_title=col,
+                    template='plotly_dark'
+                )
+                with columns[i % 4]:
+                    st.subheader(col)
+                    st.plotly_chart(fig1)
+
+        elif selected_sub_menu == "Nowcast - Inflation":
+
+            st.title("Nowcast - Inflation")
+
+            df = pd.read_csv(nowinfl_path)
+            df['Date'] = pd.to_datetime(df['Date'])
+            sel_cols = [col for col in df.columns if col != 'Date']
+            sel_colx = st.multiselect(
+                "Select:",
+                sel_cols,
+                default=sel_cols
+            )
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                sdt = st.date_input("Start", min_value=df['Date'].min(), max_value=df['Date'].max(),
+                                    value=df['Date'].min())
+            with col2:
+                edt = st.date_input("End", min_value=df['Date'].min(), max_value=df['Date'].max(),
+                                    value=df['Date'].max())
+
+            dfa = df[['Date'] + sel_colx]
+            dfa = dfa[(dfa['Date'] >= pd.to_datetime(sdt)) & (dfa['Date'] <= pd.to_datetime(edt))]
+            columns = st.columns(4)
+            for i, col in enumerate(sel_colx):
+                xdf = dfa[['Date', col]]
+                xdf = xdf.dropna()
+                fig1 = go.Figure()
+                fig1.add_trace(
+                    go.Scatter(x=xdf['Date'], y=xdf[col], name=col, mode='lines', line=dict(color='rgb(245, 130, 32)')))
+                fig1.update_layout(
+                    xaxis_title='Date',
+                    yaxis_title=col,
+                    template='plotly_dark'
+                )
+                with columns[i % 4]:
+                    st.subheader(col)
+                    st.plotly_chart(fig1)
+
+        elif selected_sub_menu == "Nowcast - US CPI":
+
+            st.title("Nowcast - US CPI")
+
+            df = pd.read_csv(nowinfl_path)
+            df = df[['Date', 'United States_YoY']]
+            df = df.rename(columns={'Date': 'DATE'})
+            df['DATE'] = pd.to_datetime(df['DATE'])
+
+            last_date = df['DATE'].iloc[-1]
+            last_value = df['United States_YoY'].iloc[-1]
+            year = last_date.year
+            month = last_date.month
+            r_value = round(last_value, 2)
+            st.subheader(f"{year}년 {month}월 {last_date.day}일 현재 {year}년 {month}월의 Nowcast 값은 {r_value}%입니다.")
+
+            df['YEAR_MONTH'] = df['DATE'].dt.to_period('M')
+            latest_data_per_month = df.loc[df.groupby('YEAR_MONTH')['DATE'].idxmax()]
+            df = latest_data_per_month.drop(columns='YEAR_MONTH')
+            df['DATE'] = df['DATE'] + pd.offsets.MonthEnd(0)
+            df = df.dropna()
+            df = df.rename(columns={'United States_YoY': 'NowCast_US CPI'})
+
+            dfm = pd.read_excel(macro_path, sheet_name='MONTHLYV', skiprows=2)
+            dfm = dfm.iloc[:, 94:96]
+            new_col = ['DATE', 'USCPI_YoY']
+            dfm.columns = new_col
+
+            cpidf = pd.merge(df, dfm, on='DATE', how='left')
+            cpidf['Diff'] = cpidf['NowCast_US CPI'] - cpidf['USCPI_YoY']
+
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=cpidf['DATE'], y=cpidf['NowCast_US CPI'],
+                    mode='lines+markers',
+                    name='NowCast_US CPI',
+                    line=dict(color='rgb(245,130,32)')
+                ))
+                fig.add_trace(go.Scatter(
+                    x=cpidf['DATE'], y=cpidf['USCPI_YoY'],
+                    mode='lines+markers',
+                    name='USCPI_YoY',
+                    line=dict(color='rgb(13,45,79)')
+                ))
+                fig.update_layout(
+                    title='US CPI: Nowcast vs. Actual',
+                    xaxis_title='Date',
+                    yaxis_title='YoY(%)',
+                    template='plotly_dark',
+                    legend=dict(
+                        orientation='h',
+                        yanchor='top',
+                        y=1.1,
+                        xanchor='center',
+                        x=0.5
+                    )
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+                fig2 = go.Figure()
+                fig2.add_trace(go.Scatter(
+                    x=cpidf['DATE'], y=cpidf['Diff'],
+                    mode='lines',
+                    name='NowCast_US CPI - USCPI_YoY',
+                    line=dict(color='rgb(245,130,32)')
+                ))
+                fig2.update_layout(
+                    title='US CPI: Nowcast - Actual',
+                    xaxis_title='Date',
+                    yaxis_title='YoY(%)',
+                    template='plotly_dark'
+                )
+                st.plotly_chart(fig2, use_container_width=True)
+
+        elif selected_sub_menu == "Macro Driver":
 
             st.title("Macro Driver")
             st.write("")
