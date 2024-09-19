@@ -28,13 +28,11 @@ import itertools
 import os
 from PIL import Image
 
-
-series_path = "data/streamlit_24.xlsx"
 cylfile_path = "data/streamlit_24_cycle.xlsx"
 simfile_path = "data/streamlit_24_sim.xlsx"
 fx_path = "data/streamlit_24_fx.xlsx"
 model_path = "data/streamlit_24_signal.xlsx"
-macro_path = "data/streamlit_24_macro.xlsx"
+macro_path = "data/streamlit_24_macro.xlsm"
 usig_path = "data/streamlit_24_usigpick.xlsx"
 market_path = "data/streamlit_24_marketVV.xlsx"
 allo_path = "data/streamlit_24_allocation.xlsx"
@@ -44,12 +42,12 @@ slidepath = "images/QIS_Sep24"
 image_path = "images/miraeasset.png"
 igimage_path = "images/usig.png"
 #
-# series_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24.xlsx"
+#
 # cylfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_cycle.xlsx"
 # simfile_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_sim.xlsx"
 # fx_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_fx.xlsx"
 # model_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_signal.xlsx"
-# macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsx"
+# macro_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_macro.xlsm"
 # usig_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_usigpick.xlsx"
 # market_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_marketVV.xlsx"
 # allo_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\streamlit_24_allocation.xlsx"
@@ -1815,9 +1813,9 @@ if authentication_status:
             dfseries = reduce(lambda left, right: pd.merge(left, right, on='DATE', how='outer'), dfs)
 
             dfmeta = pd.read_excel(macro_path, sheet_name='META')
-            dfd = pd.read_excel(macro_path, sheet_name='DAILYV', skiprows=1)
-            dfw = pd.read_excel(macro_path, sheet_name='WEEKLYV', skiprows=1)
-            dfm = pd.read_excel(macro_path, sheet_name='MONTHLYV', skiprows=1)
+            dfd = pd.read_excel(macro_path, sheet_name='DAILYV', skiprows=2)
+            dfw = pd.read_excel(macro_path, sheet_name='WEEKLYV', skiprows=2)
+            dfm = pd.read_excel(macro_path, sheet_name='MONTHLYV', skiprows=2)
 
             if 'DATE' in dfseries.columns:
                 dfseries['DATE'] = pd.to_datetime(dfseries['DATE'])
@@ -1985,8 +1983,8 @@ if authentication_status:
             columns = [col for col in dfseries.columns if col != 'DATE']
 
             dfmeta = pd.read_excel(macro_path, sheet_name='META')
-            dfm = pd.read_excel(macro_path, sheet_name='MONTHLYV', skiprows=1)
-            dfms = pd.read_excel(macro_path, sheet_name='MSURVEYV', skiprows=1)
+            dfm = pd.read_excel(macro_path, sheet_name='MONTHLYV', skiprows=2)
+            dfms = pd.read_excel(macro_path, sheet_name='MSURVEYV', skiprows=2)
 
             col1, col2, col3, col4 = st.columns(4)
             with col1:
