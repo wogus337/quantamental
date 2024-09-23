@@ -41,6 +41,7 @@ pairres_path = "data/relativ_analysis_out_240830.csv"
 nowgdp_path = "data/gdpnowout.csv"
 nowinfl_path = "data/inflout.csv"
 slidepath = "images/QIS_Sep24"
+Fslidepath = "images/FMVC_Sep24"
 image_path = "images/miraeasset.png"
 igimage_path = "images/usig.png"
 #
@@ -58,6 +59,7 @@ igimage_path = "images/usig.png"
 # nowgdp_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\gdpnowout.csv"
 # nowinfl_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\inflout.csv"
 # slidepath = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\QIS_Sep24"
+# Fslidepath = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\FMVC_Sep24"
 # image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
 # igimage_path = r"D:\Anaconda_envs\streamlit\pycharmprj\usig.png"
 
@@ -261,7 +263,7 @@ if authentication_status:
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
     if selected_main_menu == "Main":
-        sub_menu_options = ["Main", "PPT_QIS"]
+        sub_menu_options = ["Main", "PPT_QIS", "PPT_FMVC"]
 
     if selected_main_menu == "DART공시정보 검색":
         sub_menu_options = ["최근 공시정보 검색"]
@@ -288,6 +290,65 @@ if authentication_status:
     selected_sub_menu = st.sidebar.selectbox("Select a Sub Menu", sub_menu_options)
 
     if selected_main_menu == "Main":
+
+        def load_images(slidepath):
+            image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".PNG")],
+                                 key=lambda x: int(os.path.splitext(x)[0]))
+            return image_files
+
+
+        def change_image(direction, menu_key):
+            if direction == "next" and st.session_state[f'{menu_key}_current_image_index'] < len(
+                    st.session_state[f'{menu_key}_image_files']) - 1:
+                st.session_state[f'{menu_key}_current_image_index'] += 1
+            elif direction == "previous" and st.session_state[f'{menu_key}_current_image_index'] > 0:
+                st.session_state[f'{menu_key}_current_image_index'] -= 1
+
+
+        def go_to_page(menu_key):
+            page_number = st.session_state[f'{menu_key}_page_number']
+            if 1 <= page_number <= len(st.session_state[f'{menu_key}_image_files']):
+                st.session_state[f'{menu_key}_current_image_index'] = page_number - 1
+
+
+        def display_images(slidepath, menu_key):
+            if f'{menu_key}_image_files' not in st.session_state:
+                st.session_state[f'{menu_key}_image_files'] = load_images(slidepath)
+
+            if f'{menu_key}_current_image_index' not in st.session_state:
+                st.session_state[f'{menu_key}_current_image_index'] = 0
+
+            total_images = len(st.session_state[f'{menu_key}_image_files'])
+
+            col1, col2, col3 = st.columns([2, 2, 6])
+            with col1:
+                st.write(f"{st.session_state[f'{menu_key}_current_image_index'] + 1} of {total_images}")
+                st.number_input("페이지 이동: ", min_value=1, max_value=total_images, value=1, step=1,
+                                key=f"{menu_key}_page_number",
+                                on_change=go_to_page, args=(menu_key,))
+
+            current_image_file = os.path.join(slidepath,
+                                              st.session_state[f'{menu_key}_image_files'][
+                                                  st.session_state[f'{menu_key}_current_image_index']])
+
+            image = Image.open(current_image_file)
+            width, height = image.size
+            new_width = int(width * 1.3)
+            new_height = int(height * 1.3)
+            image_resized = image.resize((new_width, new_height))
+
+            col1, col2 = st.columns([7, 3])
+            with col1:
+                st.image(image_resized, use_column_width=True)
+
+            col1, col2, col3, col4 = st.columns([2, 4, 2, 2])
+            with col1:
+                st.button("⬅️ Previous", on_click=change_image, args=("previous", menu_key),
+                          key=f"{menu_key}_prev_button")
+            with col3:
+                st.button("Next ➡️", on_click=change_image, args=("next", menu_key), key=f"{menu_key}_next_button")
+
+
         if selected_sub_menu == "Main":
 
             st.title("Quantamental Investment Strategy - 메뉴설명")
@@ -302,64 +363,10 @@ if authentication_status:
             st.subheader("DART공시정보 검색: 금감원 DART 공시자료 조회")
 
         elif selected_sub_menu == "PPT_QIS":
+            display_images(slidepath, "PPT_QIS")
 
-            def load_images(slidepath):
-                image_files = sorted([f for f in os.listdir(slidepath) if f.endswith(".PNG")],
-                                     key=lambda x: int(os.path.splitext(x)[0]))
-                return image_files
-
-
-            def change_image(direction):
-                if direction == "next" and st.session_state.current_image_index < len(st.session_state.image_files) - 1:
-                    st.session_state.current_image_index += 1
-                elif direction == "previous" and st.session_state.current_image_index > 0:
-                    st.session_state.current_image_index -= 1
-
-
-            def go_to_page():
-                page_number = st.session_state.page_number
-                if 1 <= page_number <= len(st.session_state.image_files):
-                    st.session_state.current_image_index = page_number - 1
-
-
-            def main(slidepath = slidepath):
-
-                if "image_files" not in st.session_state:
-                    st.session_state.image_files = load_images(slidepath)
-
-                if "current_image_index" not in st.session_state:
-                    st.session_state.current_image_index = 0
-
-                total_images = len(st.session_state.image_files)
-
-                col1, col2, col3 = st.columns([2, 2, 6])
-                with col1:
-                    st.write(f"{st.session_state.current_image_index + 1} of {total_images}")
-                    st.number_input("페이지 이동: ", min_value=1, max_value=total_images, value=1, step=1, key="page_number",
-                                    on_change=go_to_page)
-
-                current_image_file = os.path.join(slidepath,
-                                                  st.session_state.image_files[st.session_state.current_image_index])
-
-                image = Image.open(current_image_file)
-                width, height = image.size
-                new_width = int(width * 1.3)
-                new_height = int(height * 1.3)
-                image_resized = image.resize((new_width, new_height))
-
-                col1, col2 = st.columns([7, 3])
-                with col1:
-                    #st.image(current_image_file, use_column_width=True, output_format='PNG')
-                    st.image(image_resized, use_column_width=True)
-
-                col1, col2, col3, col4 = st.columns([2, 4, 2, 2])
-                with col1:
-                    st.button("⬅️ Previous", on_click=change_image, args=("previous",))
-                with col3:
-                    st.button("Next ➡️", on_click=change_image, args=("next",))
-
-            if __name__ == "__main__":
-                main()
+        elif selected_sub_menu == "PPT_FMVC":
+            display_images(Fslidepath, "PPT_FMVC")
 
     if selected_main_menu == "DART공시정보 검색":
         if selected_sub_menu == "최근 공시정보 검색":
@@ -1323,7 +1330,7 @@ if authentication_status:
 
             col1, col2 = st.columns(2)
             with col1:
-                selecpr = st.radio("분석기간", ["1Y", "3Y", "5Y", "10Y", "Max"], horizontal=True)
+                selecpr = st.radio("분석기간", ["1M", "3M", "6M", "1Y", "3Y", "5Y", "10Y", "Max"], horizontal=True)
 
                 edate = df['DATE'].max()
                 if selecpr == "1Y":
@@ -1334,6 +1341,12 @@ if authentication_status:
                     sdate = edate - pd.DateOffset(years=5)
                 elif selecpr == "10Y":
                     sdate = edate - pd.DateOffset(years=10)
+                elif selecpr == "1M":
+                    sdate = edate - pd.DateOffset(months=1)
+                elif selecpr == "3M":
+                    sdate = edate - pd.DateOffset(months=3)
+                elif selecpr == "6M":
+                    sdate = edate - pd.DateOffset(months=6)
                 elif selecpr == "Max":
                     sdate = df['DATE'].min()
 
@@ -1462,16 +1475,20 @@ if authentication_status:
             df_last = df_last[['DATE', selected_column1]]
             fdf = pd.merge(fdf, df_last, on='DATE', how='left')
 
+            bcolors = ['rgb(0, 169, 206)', 'rgb(40, 178, 107)', 'rgb(174, 99, 78)', 'rgb(132, 136, 139)']
             col1, col2 = st.columns([3, 1])
             with col1:
                 fig = go.Figure()
-                for phase in phase_nm:
+                for i, phase in enumerate(phase_nm):
                     fig.add_trace(go.Bar(
                         x=fdf['DATE'], y=fdf[phase],
                         name=f'{phase}',
                         yaxis='y3',
                         opacity=0.4,
-                        marker=dict(line=dict(width=0))
+                        marker=dict(
+                            color=bcolors[i],
+                            line=dict(width=0)
+                        )
                     ))
                 fig.add_trace(go.Scatter(
                     x=fdf['DATE'], y=fdf['Economic_Cycle_Indicator'],
@@ -1511,6 +1528,7 @@ if authentication_status:
                     ),
                     barmode='overlay',
                     bargap=0,
+                    bargroupgap=0,
                     template='plotly_dark',
                     legend=dict(
                         orientation='h',
@@ -1519,9 +1537,9 @@ if authentication_status:
                         xanchor='center',  # 범례의 x축 앵커를 가운데로
                         x=0.5
                     ),
-                    height=600
+                    height=800
                 )
-
+                fig.update_xaxes(type='category')
                 st.plotly_chart(fig)
 
         elif selected_sub_menu == "Credit Cycle":
@@ -1568,16 +1586,20 @@ if authentication_status:
             df_last = df_last[['DATE', selected_column1]]
             fdf = pd.merge(fdf, df_last, on='DATE', how='left')
 
+            bcolors = ['rgb(0, 169, 206)', 'rgb(40, 178, 107)', 'rgb(174, 99, 78)', 'rgb(132, 136, 139)']
             col1, col2 = st.columns([3, 1])
             with col1:
                 fig = go.Figure()
-                for phase in phase_nm:
+                for i, phase in enumerate(phase_nm):
                     fig.add_trace(go.Bar(
                         x=fdf['DATE'], y=fdf[phase],
                         name=f'{phase}',
                         yaxis='y3',
                         opacity=0.4,
-                        marker=dict(line=dict(width=0))
+                        marker=dict(
+                            color=bcolors[i],
+                            line=dict(width=0)
+                        )
                     ))
                 fig.add_trace(go.Scatter(
                     x=fdf['DATE'], y=fdf['Credit_Cycle_Indicator'],
@@ -1617,6 +1639,7 @@ if authentication_status:
                     ),
                     barmode='overlay',
                     bargap=0,
+                    bargroupgap=0,
                     template='plotly_dark',
                     legend=dict(
                         orientation='h',
@@ -1625,9 +1648,9 @@ if authentication_status:
                         xanchor='center',  # 범례의 x축 앵커를 가운데로
                         x=0.5
                     ),
-                    height=600
+                    height=800
                 )
-
+                fig.update_xaxes(type='category')
                 st.plotly_chart(fig)
 
     elif selected_main_menu == "유사국면":
@@ -2369,6 +2392,8 @@ if authentication_status:
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfw.tail(52)
+                hit_d1 = (chart_sig['Hit_D1'] == 1).sum() / ((chart_sig['Hit_D1'] == 1).sum() + (chart_sig['Hit_D1'] == 0).sum())
+                hit_d1 = f"{hit_d1 * 100:.1f}%"
                 fig1 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig1.add_trace(
@@ -2384,7 +2409,7 @@ if authentication_status:
                 fig1.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig1.update_yaxes(range=[-0.5, 0.5], secondary_y=True)
                 fig1.update_layout(
-                    title_text="Duration Model1(선행변수모델) - Weekly",
+                    title_text=f"Duration Model1(선행변수모델) - Weekly(Hit:{hit_d1})",
                     xaxis_title="Date",
                     yaxis_title="Dur_Leading",
                     yaxis2_title="Chg_Dur",
@@ -2410,8 +2435,10 @@ if authentication_status:
 
             st.subheader("Duration Mdoel2(Boruta) - Weekly")
             col1, col2 = st.columns([2, 1])
-            with col1:
+            with (col1):
                 chart_sig = dfw.tail(52)
+                hit_d2 = (chart_sig['Hit_D2'] == 1).sum() / ((chart_sig['Hit_D2'] == 1).sum() + (chart_sig['Hit_D2'] == 0).sum())
+                hit_d2 = f"{hit_d2 * 100:.1f}%"
                 fig2 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig2.add_trace(
@@ -2427,7 +2454,7 @@ if authentication_status:
                 fig2.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig2.update_yaxes(range=[-0.5, 0.5], secondary_y=True)
                 fig2.update_layout(
-                    title_text="Duration Model2(Boruta) - Weekly",
+                    title_text=f"Duration Model2(Boruta) - Weekly(Hit:{hit_d2})",
                     xaxis_title="Date",
                     yaxis_title="Dur_Boruta",
                     yaxis2_title="Chg_Dur",
@@ -2455,6 +2482,9 @@ if authentication_status:
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
+                hit_m1 = (chart_sig['Hit_Duration'] == 1).sum() / (
+                            (chart_sig['Hit_Duration'] == 1).sum() + (chart_sig['Hit_Duration'] == 0).sum())
+                hit_m1 = f"{hit_m1 * 100:.1f}%"
                 fig3 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig3.add_trace(
@@ -2470,7 +2500,7 @@ if authentication_status:
                 fig3.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig3.update_yaxes(range=[-1, 1], secondary_y=True)
                 fig3.update_layout(
-                    title_text="Duration Model3(Tree) - Monthly",
+                    title_text=f"Duration Model3(Tree) - Monthly(Hit:{hit_m1})",
                     xaxis_title="Date",
                     yaxis_title="Dur_Tree",
                     yaxis2_title="Chg_Dur",
@@ -2521,6 +2551,8 @@ if authentication_status:
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfw.tail(52)
+                hit_c1 = (chart_sig['Hit_C1'] == 1).sum() / ((chart_sig['Hit_C1'] == 1).sum() + (chart_sig['Hit_C1'] == 0).sum())
+                hit_c1 = f"{hit_c1 * 100:.1f}%"
                 fig1 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig1.add_trace(
@@ -2536,7 +2568,7 @@ if authentication_status:
                 fig1.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig1.update_yaxes(range=[-0.2, 0.2], secondary_y=True)
                 fig1.update_layout(
-                    title_text="Credit Model1 - Weekly",
+                    title_text=f"Credit Model1 - Weekly(Hit:{hit_c1})",
                     xaxis_title="Date",
                     yaxis_title="Credit_1M",
                     yaxis2_title="Chg_Credit",
@@ -2564,6 +2596,8 @@ if authentication_status:
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfw.tail(52)
+                hit_c2 = (chart_sig['Hit_C2'] == 1).sum() / ((chart_sig['Hit_C2'] == 1).sum() + (chart_sig['Hit_C2'] == 0).sum())
+                hit_c2 = f"{hit_c2 * 100:.1f}%"
                 fig2 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig2.add_trace(
@@ -2579,7 +2613,7 @@ if authentication_status:
                 fig2.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig2.update_yaxes(range=[-0.2, 0.2], secondary_y=True)
                 fig2.update_layout(
-                    title_text="Credit Model2 - Weekly",
+                    title_text=f"Credit Model2 - Weekly(Hit:{hit_c2})",
                     xaxis_title="Date",
                     yaxis_title="Credit_3M",
                     yaxis2_title="Chg_Credit",
@@ -2607,6 +2641,8 @@ if authentication_status:
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
+                hit_m1 = (chart_sig['Hit_Credit'] == 1).sum() / ((chart_sig['Hit_Credit'] == 1).sum() + (chart_sig['Hit_Credit'] == 0).sum())
+                hit_m1 = f"{hit_m1 * 100:.1f}%"
                 fig3 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig3.add_trace(
@@ -2622,7 +2658,7 @@ if authentication_status:
                 fig3.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig3.update_yaxes(range=[-0.5, 0.5], secondary_y=True)
                 fig3.update_layout(
-                    title_text="Credit Model3 - Monthly",
+                    title_text=f"Credit Model3 - Monthly(Hit:{hit_m1})",
                     xaxis_title="Date",
                     yaxis_title="Credit_Monthly",
                     yaxis2_title="Chg_Credit",
