@@ -483,7 +483,7 @@ if authentication_status:
                 }
                 params = {
                     "query": query,
-                    "display": 10,  # 가져올 결과 수
+                    "display": 100,  # 가져올 결과 수
                     "start": 1,  # 검색 결과의 시작점
                     "sort": "date"  # 날짜 순 정렬
                 }
