@@ -27,6 +27,7 @@ from scipy.stats import linregress
 import itertools
 import os
 from PIL import Image
+import xml.etree.ElementTree as ET
 
 cylfile_path = "data/streamlit_24_cycle.xlsx"
 simfile_path = "data/streamlit_24_sim.xlsx"
@@ -259,14 +260,14 @@ if authentication_status:
     st.sidebar.markdown("<h1 style='font-size: 35px; font-weight: bold;'>QIS Square</h1>", unsafe_allow_html=True)
 
     # main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "Allocation", "시나리오"]
-    main_menu_options = ["Main", "Market", "Relative", "국면", "유사국면", "Macro 분석", "모델전망 & Signal", "DART공시정보 검색"]
+    main_menu_options = ["Main", "Market", "Relative", "국면", "유사국면", "Macro 분석", "모델전망 & Signal", "기타"]
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
     if selected_main_menu == "Main":
         sub_menu_options = ["Main", "PPT_QIS", "PPT_FMVC"]
 
-    if selected_main_menu == "DART공시정보 검색":
-        sub_menu_options = ["최근 공시정보 검색"]
+    if selected_main_menu == "기타":
+        sub_menu_options = ["DART 공시정보 검색", "Naver뉴스 검색"]
 
     elif selected_main_menu == "Market":
         sub_menu_options = ["MarketBoard", "MarketChart", "주요국 만기별 금리"]
@@ -360,7 +361,7 @@ if authentication_status:
             st.subheader("유사국면: 월간 단위로 산출하는 유사국면 정보 조회")
             st.subheader("Macro 분석: 매크로 지표와 가격 지표의 상관성 파악")
             st.subheader("모델전망 & Signal: 퀀타멘탈운용본부의 AI/Quant 모델 기반 예측정보 및 모델산출물 조회")
-            st.subheader("DART공시정보 검색: 금감원 DART 공시자료 조회")
+            st.subheader("기타: DART공시정보 검색, 네이버뉴스 검색")
 
         elif selected_sub_menu == "PPT_QIS":
             display_images(slidepath, "PPT_QIS")
@@ -368,8 +369,8 @@ if authentication_status:
         elif selected_sub_menu == "PPT_FMVC":
             display_images(Fslidepath, "PPT_FMVC")
 
-    if selected_main_menu == "DART공시정보 검색":
-        if selected_sub_menu == "최근 공시정보 검색":
+    if selected_main_menu == "기타":
+        if selected_sub_menu == "DART 공시정보 검색":
 
             st.title("금융감독원 DART API - 공시정보 검색")
 
@@ -471,6 +472,71 @@ if authentication_status:
                     st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
                 else:
                     st.error("공시정보를 가져올 수 없습니다.")
+
+        elif selected_sub_menu == "Naver뉴스 검색":
+
+            def search_news(query, client_id, client_secret):
+                url = "https://openapi.naver.com/v1/search/news.xml"  # XML 형식으로 응답
+                headers = {
+                    "X-Naver-Client-Id": client_id,
+                    "X-Naver-Client-Secret": client_secret
+                }
+                params = {
+                    "query": query,
+                    "display": 10,  # 가져올 결과 수
+                    "start": 1,  # 검색 결과의 시작점
+                    "sort": "date"  # 날짜 순 정렬
+                }
+                response = requests.get(url, headers=headers, params=params, verify=False)
+                if response.status_code == 200:
+                    return response.content  # XML 데이터를 반환
+                else:
+                    return None
+
+
+            # XML 데이터를 파싱하여 뉴스 정보를 추출하는 함수
+            def parse_news_data(xml_data):
+                news_items = []
+                root = ET.fromstring(xml_data)  # XML 데이터를 파싱
+                for item in root.findall('channel/item'):
+                    title = item.find('title').text
+                    link = item.find('link').text
+                    description = item.find('description').text
+                    pub_date = item.find('pubDate').text
+
+                    news_items.append({
+                        'title': title,
+                        'link': link,
+                        'description': description,
+                        'pubDate': pub_date
+                    })
+                return news_items
+
+
+            # 뉴스 검색 및 결과를 출력하는 함수
+            def search_and_display_news(query, client_id, client_secret):
+                xml_data = search_news(query, client_id, client_secret)
+                if xml_data:
+                    news_items = parse_news_data(xml_data)
+                    for item in news_items:
+                        st.write(f"### [{item['title']}]({item['link']})")
+                        st.write(item['description'])
+                        st.write(f"Date: {item['pubDate']}")
+                else:
+                    st.error("뉴스 데이터를 가져오는 데 실패했습니다.")
+
+
+            # Streamlit 레이아웃
+            st.title("Naver News Search")
+
+            client_id = "n0qlbRou_k3DBL4j_KUq"  # Naver 클라이언트 ID 입력
+            client_secret = "gvVzpJ7aas"  # Naver 클라이언트 시크릿 입력
+
+            # 검색어 입력
+            query = st.text_input("검색어를 입력하세요:")
+
+            if query:
+                search_and_display_news(query, client_id, client_secret)
 
     if selected_main_menu == "Market":
         if selected_sub_menu == "MarketBoard":
