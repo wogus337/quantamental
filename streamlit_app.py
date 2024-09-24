@@ -2722,7 +2722,8 @@ if authentication_status:
             if sel_rating != 'All':
                 fdf2 = fdf2[fdf2['Rating'] == sel_rating]
 
-            selable_columns = [col for col in fdf2.columns if col != 'DATE']
+            fdf3 = fdf2[['Model', 'Sector', 'Tenor', 'ISIN', 'Des']]
+            selable_columns = [col for col in fdf3.columns if col != 'DATE']
 
             sel_columns = st.multiselect(
                 "Column Select:",
@@ -2730,8 +2731,8 @@ if authentication_status:
                 default=selable_columns
             )
             if sel_columns:
-                st.dataframe(fdf2[sel_columns], hide_index=True)
-                csvf = fdf2[sel_columns].to_csv(index=False)
+                st.dataframe(fdf3[sel_columns], hide_index=True)
+                csvf = fdf3[sel_columns].to_csv(index=False)
                 st.download_button(
                     label="Download CSV",
                     data=csvf,
