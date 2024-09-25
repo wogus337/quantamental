@@ -362,6 +362,15 @@ if authentication_status:
             st.subheader("Macro 분석: 매크로 지표와 가격 지표의 상관성 파악")
             st.subheader("모델전망 & Signal: 퀀타멘탈운용본부의 AI/Quant 모델 기반 예측정보 및 모델산출물 조회")
             st.subheader("기타: DART공시정보 검색, 네이버뉴스 검색")
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("차트의 주요 기능")
+            st.write("1. X축, Y축의 끝부분을 클릭하고 드래그하면 축 조절")
+            st.write("2. X축, Y축의 가운데부분을 클릭하고 드래그하면 축 이동")
+            st.write("3. line이나 bar 차트에서 범례 클릭하여 조회 원화는 계열 선택 가능")
+            st.write("4. 차트 상에서 특정 영역 드래그시 확대 가능 / 더블클릭시 초기화")
+            st.write("5. 우측 상단 icon을 통해 이미지저장, 전체화면 조희 등 가능")
 
         elif selected_sub_menu == "PPT_QIS":
             display_images(slidepath, "PPT_QIS")
