@@ -2941,8 +2941,8 @@ if authentication_status:
                 selable_columns,
                 default=selable_columns
             )
-            # if sel_columns:
-            #     st.dataframe(fdf3[sel_columns], hide_index=True)
+            if sel_columns:
+                st.dataframe(fdf3[sel_columns], hide_index=True)
             #     csvf = fdf3[sel_columns].to_csv(index=False)
             #     st.download_button(
             #         label="Download CSV",
