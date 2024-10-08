@@ -1030,27 +1030,27 @@ if authentication_status:
                 return df.to_csv(index=False).encode('utf-8')
 
             # 선택된 열의 데이터만 추출
-            if sel_cate11 != '선택 없음' and sel_cate21 != '선택 없음' and sel_cate11 != sel_cate21:
-                data_to_download = fdf[['DATE', sel_cate11, sel_cate21, 'rel']]
-                csv_data = convert_df_to_csv(data_to_download)
-                st.download_button(
-                    label="Data Download(CSV)",
-                    data=csv_data,
-                    file_name='timeseries_data.csv',
-                    mime='text/csv'
-                )
-            elif ((sel_cate11 != '선택 없음' and sel_cate21 == '선택 없음') or
-                  (sel_cate11 != '선택 없음' and sel_cate11 == sel_cate21)):
-                data_to_download = fdf[['DATE', sel_cate11]]
-                csv_data = convert_df_to_csv(data_to_download)
-                st.download_button(
-                    label="Data Download(CSV)",
-                    data=csv_data,
-                    file_name='timeseries_data.csv',
-                    mime='text/csv'
-                )
-            else:
-                pass
+            # if sel_cate11 != '선택 없음' and sel_cate21 != '선택 없음' and sel_cate11 != sel_cate21:
+            #     data_to_download = fdf[['DATE', sel_cate11, sel_cate21, 'rel']]
+            #     csv_data = convert_df_to_csv(data_to_download)
+            #     st.download_button(
+            #         label="Data Download(CSV)",
+            #         data=csv_data,
+            #         file_name='timeseries_data.csv',
+            #         mime='text/csv'
+            #     )
+            # elif ((sel_cate11 != '선택 없음' and sel_cate21 == '선택 없음') or
+            #       (sel_cate11 != '선택 없음' and sel_cate11 == sel_cate21)):
+            #     data_to_download = fdf[['DATE', sel_cate11]]
+            #     csv_data = convert_df_to_csv(data_to_download)
+            #     st.download_button(
+            #         label="Data Download(CSV)",
+            #         data=csv_data,
+            #         file_name='timeseries_data.csv',
+            #         mime='text/csv'
+            #     )
+            # else:
+            #     pass
 
         elif selected_sub_menu == "Relative(Momentum)":
 
@@ -2941,15 +2941,15 @@ if authentication_status:
                 selable_columns,
                 default=selable_columns
             )
-            if sel_columns:
-                st.dataframe(fdf3[sel_columns], hide_index=True)
-                csvf = fdf3[sel_columns].to_csv(index=False)
-                st.download_button(
-                    label="Download CSV",
-                    data=csvf,
-                    file_name='usig_pick.csv',
-                    mime='text/csv'
-                )
+            # if sel_columns:
+            #     st.dataframe(fdf3[sel_columns], hide_index=True)
+            #     csvf = fdf3[sel_columns].to_csv(index=False)
+            #     st.download_button(
+            #         label="Download CSV",
+            #         data=csvf,
+            #         file_name='usig_pick.csv',
+            #         mime='text/csv'
+            #     )
 
             st.image(igimage_path, use_column_width=True, output_format='PNG')
 
