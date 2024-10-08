@@ -216,9 +216,9 @@ def cal_table(df, chgopt, spechk):
 
 st.set_page_config(layout="wide")
 
-usernames = ['admin']
-names = ['admin']
-passwords = ['admin']
+usernames = ['admin', 'guest']
+names = ['admin', 'guest']
+passwords = ['admin', 'guest']
 hashed_passwords = stauth.Hasher(passwords).generate()
 
 # YAML
