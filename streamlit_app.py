@@ -1550,7 +1550,7 @@ if authentication_status:
             df_last = df_last[['DATE', selected_column1]]
             fdf = pd.merge(fdf, df_last, on='DATE', how='left')
 
-            bcolors = ['rgb(0, 169, 206)', 'rgb(40, 178, 107)', 'rgb(174, 99, 78)', 'rgb(132, 136, 139)']
+            bcolors = ['rgb(237, 125, 49)', 'rgb(127, 127, 127)', 'rgb(68, 114, 196)', 'rgb(0, 176, 80)']
             col1, col2 = st.columns([3, 1])
             with col1:
                 fig = go.Figure()
@@ -1661,7 +1661,7 @@ if authentication_status:
             df_last = df_last[['DATE', selected_column1]]
             fdf = pd.merge(fdf, df_last, on='DATE', how='left')
 
-            bcolors = ['rgb(0, 169, 206)', 'rgb(40, 178, 107)', 'rgb(174, 99, 78)', 'rgb(132, 136, 139)']
+            bcolors = ['rgb(237, 125, 49)', 'rgb(127, 127, 127)', 'rgb(68, 114, 196)', 'rgb(0, 176, 80)']
             col1, col2 = st.columns([3, 1])
             with col1:
                 fig = go.Figure()
@@ -2508,7 +2508,7 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Duration Mdoel2(Boruta) - Weekly")
+            st.subheader("Duration Model2(Boruta) - Weekly")
             col1, col2 = st.columns([2, 1])
             with (col1):
                 chart_sig = dfw.tail(52)
@@ -2553,7 +2553,7 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Duration Mdoel3(Tree) - Monthly")
+            st.subheader("Duration Model3(Tree) - Monthly")
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
@@ -2599,7 +2599,7 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Duration Mdoel4(Adv.Tree) - Monthly")
+            st.subheader("Duration Model4(Adv.Tree) - Monthly")
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
