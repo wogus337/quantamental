@@ -923,7 +923,7 @@ if authentication_status:
                 with col1:
                     sdate = dfx1['DATE'].min().strftime('%Y/%m/%d')
                     edate = dfx1['DATE'].max().strftime('%Y/%m/%d')
-                    st.subheader(f"Date: {sdate} ~ {edate}")
+                    st.write(f"Date: {sdate} ~ {edate}")
                     start_date = st.date_input("Start", min_value=dfx1['DATE'].min(), max_value=dfx1['DATE'].max(),
                                                value=dfx1['DATE'].min())
                     st.write("")
@@ -1083,6 +1083,9 @@ if authentication_status:
                     df = pd.read_excel(market_path, sheet_name="Energy")
                     chgopt = 1
 
+            edate = df['DATE'].max().strftime('%Y/%m/%d')
+            st.write(f"as of {edate}")
+
             col1, col2 = st.columns(2)
 
             with col1:
@@ -1193,6 +1196,9 @@ if authentication_status:
             dfs = [df1, df2, df3]
             df = reduce(lambda left, right: pd.merge(left, right, on='DATE', how='outer'), dfs)
             dfx = df[df["DATE"].dt.weekday == 4]
+
+            edate = dfx['DATE'].max().strftime('%Y/%m/%d')
+            st.write(f"{edate}일 기준 두 지표의 관계(FX는 ratio, 금리는 diff)가 비정상적인 수준에 있는 Pair를 산출한 결과")
 
             dffil = pd.read_csv(pairres_path)
             dffil_lst = dffil.copy()
@@ -1402,6 +1408,9 @@ if authentication_status:
                     df = pd.read_excel(market_path, sheet_name="SPGSCI")
                 elif sel_cate == "Energy":
                     df = pd.read_excel(market_path, sheet_name="Energy")
+
+            edate = df['DATE'].max().strftime('%Y/%m/%d')
+            st.write(f"as of {edate}")
 
             col1, col2 = st.columns(2)
             with col1:
