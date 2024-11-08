@@ -2933,7 +2933,8 @@ if authentication_status:
 
         elif selected_sub_menu == "FX":
             st.title("FX Strategy by Transformer")
-            st.write("!! 2024.08.26일. USDKRW의 USD 강세모델에서 USD 강세 시그널 발생 !!")
+            st.write("- 8월 26일 발생한 원화 대비 달러 강세 시그널이 10월 23일 종료. 현재는 방향에 대한 시그널 없음")
+            st.write("- 해당기간 원달러 환율은 1,324원 -> 1,384원(+4.5%)")
 
             def fxgenfig1(fxnm, selprob, chart_title, df_path=fx_path):
                 df = pd.read_excel(df_path, sheet_name=fxnm)
