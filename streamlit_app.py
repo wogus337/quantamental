@@ -2781,52 +2781,7 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Credit Model3(Transformer) - Weekly")
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                chart_sig = dfw.tail(52)
-                hit_c2 = (chart_sig['Hit_C3'] == 1).sum() / ((chart_sig['Hit_C3'] == 1).sum() + (chart_sig['Hit_C3'] == 0).sum())
-                hit_c2 = f"{hit_c2 * 100:.1f}%"
-                fig2 = make_subplots(specs=[[{"secondary_y": True}]])
-
-                fig2.add_trace(
-                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Credit_Transformer'], name='Credit_Transformer',
-                           marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
-                    secondary_y=False,
-                )
-                fig2.add_trace(
-                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Chg_Credit'], name='Chg_Credit',
-                           marker=dict(color='rgb(13, 45, 79)', opacity=1, line=dict(width=0))),
-                    secondary_y=True,
-                )
-                fig2.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
-                fig2.update_yaxes(range=[-0.2, 0.2], secondary_y=True)
-                fig2.update_layout(
-                    title_text=f"Credit Model3(Transformer) - Weekly(Hit:{hit_c2})",
-                    xaxis_title="Date",
-                    yaxis_title="Credit_3M",
-                    yaxis2_title="Chg_Credit",
-                    template='plotly_dark',
-                    barmode='overlay',
-                    bargap=0,
-                    bargroupgap=0,
-                    legend=dict(
-                        orientation='h',
-                        yanchor='top',
-                        y=1.1,
-                        xanchor='center',
-                        x=0.5
-                    )
-                )
-                st.plotly_chart(fig2, use_container_width=True)
-            with col2:
-                recent_sig = dfw[['DATE', 'Credit_Transformer', 'Act_Direc_Credit', 'Chg_Credit']].tail(10)
-                html = recent_sig.to_html(index=False, border=0)
-                last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
-                html = last_row_style + html
-                st.markdown(html, unsafe_allow_html=True)
-
-            st.subheader("Credit Model4 - Monthly")
+            st.subheader("Credit Model3 - Monthly")
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
@@ -2871,7 +2826,7 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Credit Model5(Adv.Tree) - Monthly")
+            st.subheader("Credit Model4(Adv.Tree) - Monthly")
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
