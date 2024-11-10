@@ -3227,7 +3227,7 @@ if authentication_status:
                     xaxis_title="추천순위",
                     yaxis_title="실제성과",
                 )
-                fig.update_yaxes(range=[min(values) - (0.1 * min(values)), max(values) + (0.1 * max(values))])
+                #fig.update_yaxes(range=[min(values) - (0.1 * min(values)), max(values) + (0.1 * max(values))])
                 return fig
 
 
