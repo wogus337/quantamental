@@ -260,8 +260,8 @@ if authentication_status:
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
     if selected_main_menu == "Main":
-        sub_menu_options = ["Main", "PPT_QIS", "PPT_FMVC"]
-        #sub_menu_options = ["Main", "PPT_QIS"]
+        #sub_menu_options = ["Main", "PPT_QIS", "PPT_FMVC"]
+        sub_menu_options = ["Main", "PPT_QIS"]
 
     if selected_main_menu == "기타":
         sub_menu_options = ["DART 공시정보 검색", "Naver뉴스 검색"]
