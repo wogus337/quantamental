@@ -2574,17 +2574,17 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Duration Model3(Tree) - Monthly")
+            st.subheader("Duration Model3(Tree-I) - Monthly")
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
-                hit_m1 = (chart_sig['Hit_Duration'] == 1).sum() / (
-                            (chart_sig['Hit_Duration'] == 1).sum() + (chart_sig['Hit_Duration'] == 0).sum())
+                hit_m1 = (chart_sig['Hit_Duration_I'] == 1).sum() / (
+                            (chart_sig['Hit_Duration_I'] == 1).sum() + (chart_sig['Hit_Duration_I'] == 0).sum())
                 hit_m1 = f"{hit_m1 * 100:.1f}%"
                 fig3 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig3.add_trace(
-                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Duration_Monthly'], name='Dur_Tree',
+                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Duration_Monthly_I'], name='Dur_Tree',
                            marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
                     secondary_y=False,
                 )
@@ -2596,7 +2596,7 @@ if authentication_status:
                 fig3.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig3.update_yaxes(range=[-1, 1], secondary_y=True)
                 fig3.update_layout(
-                    title_text=f"Duration Model3(Tree) - Monthly(Hit:{hit_m1})",
+                    title_text=f"Duration Model3(Tree-I) - Monthly(Hit:{hit_m1})",
                     xaxis_title="Date",
                     yaxis_title="Dur_Tree",
                     yaxis2_title="Chg_Dur",
@@ -2614,23 +2614,23 @@ if authentication_status:
                 )
                 st.plotly_chart(fig3, use_container_width=True)
             with col2:
-                recent_sig = dfm[['DATE', 'Duration_Monthly', 'Act_Direc_Dur', 'Chg_Dur']].tail(10)
+                recent_sig = dfm[['DATE', 'Duration_Monthly_I', 'Act_Direc_Dur', 'Chg_Dur']].tail(10)
                 html = recent_sig.to_html(index=False, border=0)
                 last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Duration Model4(Adv.Tree) - Monthly")
+            st.subheader("Duration Model4(Tree-II) - Monthly")
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
-                hit_m1 = (chart_sig['Hit_Duration_adv'] == 1).sum() / (
-                            (chart_sig['Hit_Duration_adv'] == 1).sum() + (chart_sig['Hit_Duration_adv'] == 0).sum())
+                hit_m1 = (chart_sig['Hit_Duration_II'] == 1).sum() / (
+                            (chart_sig['Hit_Duration_II'] == 1).sum() + (chart_sig['Hit_Duration_II'] == 0).sum())
                 hit_m1 = f"{hit_m1 * 100:.1f}%"
                 fig3 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig3.add_trace(
-                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Duration_Monthly_advTree'], name='Dur_Tree_adv',
+                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Duration_Monthly_II'], name='Dur_Tree_adv',
                            marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
                     secondary_y=False,
                 )
@@ -2642,7 +2642,7 @@ if authentication_status:
                 fig3.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig3.update_yaxes(range=[-1, 1], secondary_y=True)
                 fig3.update_layout(
-                    title_text=f"Duration Model4(Adv.Tree) - Monthly(Hit:{hit_m1})",
+                    title_text=f"Duration Model4(Tree-II) - Monthly(Hit:{hit_m1})",
                     xaxis_title="Date",
                     yaxis_title="Dur_Tree",
                     yaxis2_title="Chg_Dur",
@@ -2660,7 +2660,7 @@ if authentication_status:
                 )
                 st.plotly_chart(fig3, use_container_width=True)
             with col2:
-                recent_sig = dfm[['DATE', 'Duration_Monthly_advTree', 'Act_Direc_Dur', 'Chg_Dur']].tail(10)
+                recent_sig = dfm[['DATE', 'Duration_Monthly_II', 'Act_Direc_Dur', 'Chg_Dur']].tail(10)
                 html = recent_sig.to_html(index=False, border=0)
                 last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
                 html = last_row_style + html
@@ -2779,16 +2779,16 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Credit Model3 - Monthly")
+            st.subheader("Credit Model3(Tree-I) - Monthly")
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
-                hit_m1 = (chart_sig['Hit_Credit'] == 1).sum() / ((chart_sig['Hit_Credit'] == 1).sum() + (chart_sig['Hit_Credit'] == 0).sum())
+                hit_m1 = (chart_sig['Hit_Credit_I'] == 1).sum() / ((chart_sig['Hit_Credit_I'] == 1).sum() + (chart_sig['Hit_Credit_I'] == 0).sum())
                 hit_m1 = f"{hit_m1 * 100:.1f}%"
                 fig3 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig3.add_trace(
-                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Credit_Monthly'], name='Credit_Monthly',
+                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Credit_Monthly_I'], name='Credit_Monthly_I',
                            marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
                     secondary_y=False,
                 )
@@ -2800,7 +2800,7 @@ if authentication_status:
                 fig3.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig3.update_yaxes(range=[-0.5, 0.5], secondary_y=True)
                 fig3.update_layout(
-                    title_text=f"Credit Model4 - Monthly(Hit:{hit_m1})",
+                    title_text=f"Credit Model4(Tree-I) - Monthly(Hit:{hit_m1})",
                     xaxis_title="Date",
                     yaxis_title="Credit_Monthly",
                     yaxis2_title="Chg_Credit",
@@ -2818,22 +2818,22 @@ if authentication_status:
                 )
                 st.plotly_chart(fig3, use_container_width=True)
             with col2:
-                recent_sig = dfm[['DATE', 'Credit_Monthly', 'Act_Direc_Credit', 'Chg_Credit']].tail(10)
+                recent_sig = dfm[['DATE', 'Credit_Monthly_I', 'Act_Direc_Credit', 'Chg_Credit']].tail(10)
                 html = recent_sig.to_html(index=False, border=0)
                 last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Credit Model4(Adv.Tree) - Monthly")
+            st.subheader("Credit Model4(Tree-II) - Monthly")
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
-                hit_m1 = (chart_sig['Hit_Credit_adv'] == 1).sum() / ((chart_sig['Hit_Credit_adv'] == 1).sum() + (chart_sig['Hit_Credit_adv'] == 0).sum())
+                hit_m1 = (chart_sig['Hit_Credit_II'] == 1).sum() / ((chart_sig['Hit_Credit_II'] == 1).sum() + (chart_sig['Hit_Credit_II'] == 0).sum())
                 hit_m1 = f"{hit_m1 * 100:.1f}%"
                 fig3 = make_subplots(specs=[[{"secondary_y": True}]])
 
                 fig3.add_trace(
-                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Credit_Monthly_advTree'], name='Credit_Monthly_advTree',
+                    go.Bar(x=chart_sig['DATE'], y=chart_sig['Credit_Monthly_II'], name='Credit_Monthly_II',
                            marker=dict(color='rgb(245, 130, 32)', opacity=1, line=dict(width=0))),
                     secondary_y=False,
                 )
@@ -2845,7 +2845,7 @@ if authentication_status:
                 fig3.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig3.update_yaxes(range=[-0.5, 0.5], secondary_y=True)
                 fig3.update_layout(
-                    title_text=f"Credit Model5(Adv.Tree) - Monthly(Hit:{hit_m1})",
+                    title_text=f"Credit Model4(Tree-II) - Monthly(Hit:{hit_m1})",
                     xaxis_title="Date",
                     yaxis_title="Credit_Monthly",
                     yaxis2_title="Chg_Credit",
@@ -2863,7 +2863,7 @@ if authentication_status:
                 )
                 st.plotly_chart(fig3, use_container_width=True)
             with col2:
-                recent_sig = dfm[['DATE', 'Credit_Monthly_advTree', 'Act_Direc_Credit', 'Chg_Credit']].tail(10)
+                recent_sig = dfm[['DATE', 'Credit_Monthly_II', 'Act_Direc_Credit', 'Chg_Credit']].tail(10)
                 html = recent_sig.to_html(index=False, border=0)
                 last_row_style = '<style>table.dataframe tr:last-child { font-weight: bold; }</style>'
                 html = last_row_style + html
