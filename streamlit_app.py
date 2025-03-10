@@ -3507,16 +3507,16 @@ if authentication_status:
 
             col1, col2 = st.columns(2)
             with col1:
-                fig_jpy = fdschart("USDJPY")
-                st.plotly_chart(fig_jpy)
-            with col2:
                 fig_krw = fdschart("USDKRW")
                 st.plotly_chart(fig_krw)
+            with col2:
+                fig_inr = fdschart("INRKRW")
+                st.plotly_chart(fig_inr)
 
             col1, col2 = st.columns(2)
             with col1:
-                fig_inr = fdschart("INRKRW")
-                st.plotly_chart(fig_inr)
+                fig_jpy = fdschart("USDJPY")
+                st.plotly_chart(fig_jpy)
 
     authenticator.logout('Logout', 'sidebar')
 
