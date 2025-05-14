@@ -352,7 +352,7 @@ if authentication_status:
 
 
         if selected_sub_menu == "Main":
-            st.image(headimage_path, use_column_width=True, output_format='PNG')
+            st.image(headimage_path, output_format='PNG', width=600))
 
         elif selected_sub_menu == "PPT_QIS":
             display_images(slidepath, "PPT_QIS")
