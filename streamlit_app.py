@@ -282,8 +282,8 @@ if authentication_status:
         sub_menu_options = ["유사국면분석"]
 
     elif selected_main_menu == "Macro 분석":
-        sub_menu_options = ["Macro Driver", "Macro: Actual vs. Survey", "Nowcast - GDP", "Nowcast - Inflation",
-                            "Nowcast - US CPI", "MAGIFI Macro LI"]
+        sub_menu_options = ["MAGIFI Macro LI", "Macro Driver", "Macro: Actual vs. Survey", "Nowcast - GDP", "Nowcast - Inflation",
+                            "Nowcast - US CPI"]
 
     elif selected_main_menu == "모델전망 & Signal":
         #sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "RankingModel", "FX", "FDS"]
