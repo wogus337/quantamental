@@ -262,8 +262,8 @@ if authentication_status:
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
     if selected_main_menu == "Main":
-        #sub_menu_options = ["Main", "PPT_QIS", "PPT_FMVC"]
-        sub_menu_options = ["Main", "PPT_QIS"]
+        sub_menu_options = ["Main", "PPT_QIS", "PPT_FMVC"]
+        #sub_menu_options = ["Main", "PPT_QIS"]
 
     if selected_main_menu == "기타":
         sub_menu_options = ["DART 공시정보 검색", "Naver뉴스 검색"]
@@ -282,7 +282,7 @@ if authentication_status:
 
     elif selected_main_menu == "Macro 분석":
         sub_menu_options = ["Macro Driver", "Macro: Actual vs. Survey", "Nowcast - GDP", "Nowcast - Inflation",
-                            "Nowcast - US CPI", "MAGI Macro LI"]
+                            "Nowcast - US CPI", "MAGIFI Macro LI"]
 
     elif selected_main_menu == "모델전망 & Signal":
         #sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "RankingModel", "FX", "FDS"]
@@ -2456,7 +2456,9 @@ if authentication_status:
                 st.markdown(html, unsafe_allow_html=True)
                 st.plotly_chart(fig3)
 
-        elif selected_sub_menu == "MAGI Macro LI":
+        elif selected_sub_menu == "MAGIFI Macro LI":
+
+            st.title("MAGIFI - Leading Indicator")
 
             def li_chart(li_path, sheet_name):
                 df = pd.read_excel(li_path, sheet_name=sheet_name)
