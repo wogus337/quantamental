@@ -40,6 +40,7 @@ fds_path = "data/streamlit_24_fds.xlsx"
 pairres_path = "data/relativ_analysis_out_240830.csv"
 nowgdp_path = "data/gdpnowout.csv"
 nowinfl_path = "data/inflout.csv"
+li_path = "data/magili.xlsx"
 slidepath = "images/QIS"
 Fslidepath = "images/FMVC"
 image_path = "images/miraeasset.png"
@@ -58,6 +59,7 @@ igimage_path = "images/usig.png"
 # pairres_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\relativ_analysis_out_240830.csv"
 # nowgdp_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\gdpnowout.csv"
 # nowinfl_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\inflout.csv"
+# li_path = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\magili.xlsx"
 # slidepath = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\QIS_Sep24"
 # Fslidepath = r"\\172.16.130.210\채권운용부문\FMVC\Monthly QIS\making_files\SC_2408\FMVC_Sep24"
 # image_path = r"D:\Anaconda_envs\streamlit\pycharmprj\miraeasset.png"
@@ -280,7 +282,7 @@ if authentication_status:
 
     elif selected_main_menu == "Macro 분석":
         sub_menu_options = ["Macro Driver", "Macro: Actual vs. Survey", "Nowcast - GDP", "Nowcast - Inflation",
-                            "Nowcast - US CPI"]
+                            "Nowcast - US CPI", "MAGI Macro LI"]
 
     elif selected_main_menu == "모델전망 & Signal":
         #sub_menu_options = ["금리", "USIG스프레드", "USIG 추천종목", "RankingModel", "FX", "FDS"]
@@ -1940,7 +1942,6 @@ if authentication_status:
                     st.plotly_chart(fig1)
 
         elif selected_sub_menu == "Nowcast - Inflation":
-
             st.title("Nowcast - Inflation")
 
             df = pd.read_csv(nowinfl_path)
@@ -2454,6 +2455,56 @@ if authentication_status:
                                                     """
                 st.markdown(html, unsafe_allow_html=True)
                 st.plotly_chart(fig3)
+
+        elif selected_sub_menu == "MAGI Macro LI":
+
+            def li_chart(li_path, sheet_name):
+                df = pd.read_excel(li_path, sheet_name=sheet_name)
+                df_sub = df.iloc[:, 0:6]
+
+                date_col = df_sub.columns[0]
+                actual_col = df_sub.columns[1]
+                pred_cols = df_sub.columns[2:]
+
+                if not pd.api.types.is_datetime64_any_dtype(df_sub[date_col]):
+                    df_sub[date_col] = pd.to_datetime(df_sub[date_col])
+
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=df_sub[date_col],
+                    y=df_sub[actual_col],
+                    mode='lines',
+                    name=actual_col,
+                    line=dict(color='black', width=4)
+                ))
+                for col in pred_cols:
+                    fig.add_trace(go.Scatter(
+                        x=df_sub[date_col],
+                        y=df_sub[col],
+                        mode='lines',
+                        name=col,
+                        line=dict(width=2)
+                    ))
+                fig.update_layout(
+                    title=f"{sheet_name}",
+                    xaxis_title="Date",
+                    yaxis_title="Value",
+                    hovermode="x unified"
+                )
+
+                return fig  # 차트를 반환만 함
+
+            sheet_list = ['PMI_MAN_Global', 'PMI_MAN_US', 'PMI_SRV_US_3MMA',
+                          'Earning_US_Trail', 'Earning_US_BEST_EPS', 'Earning_MSCIW_Trail', 'Earning_MSCIW_BEST_EPS']
+
+            for i in range(0, len(sheet_list), 2):
+                cols = st.columns(2)
+
+                for j in range(2):
+                    if i + j < len(sheet_list):
+                        with cols[j]:
+                            fig = li_chart(li_path, sheet_list[i + j])
+                            st.plotly_chart(fig, use_container_width=True)
 
     elif selected_main_menu == "모델전망 & Signal":
         if selected_sub_menu == "금리":
