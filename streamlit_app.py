@@ -2444,8 +2444,8 @@ if authentication_status:
             st.write("1. 다양한 매크로 지표와 분석대상 지표의 시차 상관 분석")
             st.write("2. 유의미한 지표 선정(Lagged Corr의 Z-Value 기준 / 분석기간 10y, 15y)")
             st.write("3. 선정된 시차변수들의 주성분 분석을 통해 Indicator 산출")
-            st.wriite("")
-
+            st.write("")
+            
             def li_chart(li_path, sheet_name):
                 df = pd.read_excel(li_path, sheet_name=sheet_name)
                 df_sub = df.iloc[:, 0:6]
