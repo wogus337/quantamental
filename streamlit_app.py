@@ -256,6 +256,7 @@ if authentication_status:
     st.sidebar.write("")
     st.sidebar.image(image_path, use_column_width=True, output_format='PNG')
     st.sidebar.write("")
+    st.sidebar.write("Last Update: 2025-06-06")
     st.sidebar.markdown("<h1 style='font-size: 35px; font-weight: bold;'>QIS Square</h1>", unsafe_allow_html=True)
 
     # main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "Allocation", "시나리오"]
