@@ -1740,9 +1740,8 @@ if authentication_status:
                 index=0
             )
 
-
             sel_df = df_simdt[df_simdt['EDATE'] == sel_edt]
-
+            sel_df = sel_df.reset_index(drop=True)
             sel_dftable = sel_df.drop(columns=['GPT_K', 'GPT_S'])
             st.table(sel_dftable)
 
