@@ -1735,7 +1735,7 @@ if authentication_status:
 
             dates_rev = df_simdt['EDATE'].unique()[::-1]
             sel_edt = st.selectbox(
-                "분석기준일을 선택하면 해당기준일에 산출한 유사국면 리스트가 생성됩니다.",
+                "분석기준일을 선택하면 해당기준일에 산출한 유사국면 리스트가 생성됩니다. 분석기준 데이터는 매월말을 주기로 최근 6개월 기준입니다.",
                 dates_rev,
                 index=0
             )
