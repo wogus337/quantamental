@@ -1746,13 +1746,12 @@ if authentication_status:
             st.table(sel_dftable)
 
             if pd.notna(sel_df.loc[0, 'GPT_K']):
-                st.write("분석기준일의 시장 상황 요약(by ChatGPT")
                 st.write(sel_df.loc[0, 'GPT_K'])
 
             fil_dt = df_simdt[df_simdt['EDATE'] == sel_edt]['EDATE_SIM']
             sel_simdt = st.selectbox("산출된 유사국면을 선택(EDATE_SIM 기준)하면 정보가 표시됩니다.", fil_dt)
 
-            if sel_edt == df_simdt['EDATE'].max():
+            if sel_edt == sel_df['EDATE'].max():
                 for i in range(len(fil_dt)):
                     if sel_simdt == fil_dt.iloc[i]:
                         if pd.notna(sel_df.loc[i, 'GPT_S']):
