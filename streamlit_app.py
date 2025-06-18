@@ -1606,7 +1606,10 @@ if authentication_status:
                     ),
                     height=800
                 )
-                fig.update_xaxes(type='category')
+                fig.update_xaxes(
+                    type='category',
+                    range=['2010-01-01', str(fdf['DATE'].iloc[-1])]
+                )
                 st.plotly_chart(fig)
 
         elif selected_sub_menu == "Credit Cycle":
@@ -1717,7 +1720,10 @@ if authentication_status:
                     ),
                     height=800
                 )
-                fig.update_xaxes(type='category')
+                fig.update_xaxes(
+                    type='category',
+                    range=['2010-01-01', str(fdf['DATE'].iloc[-1])]
+                )
                 st.plotly_chart(fig)
 
     elif selected_main_menu == "유사국면":
