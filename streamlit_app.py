@@ -3553,13 +3553,13 @@ if authentication_status:
                 fig_krw = fdschart("USDKRW")
                 st.plotly_chart(fig_krw)
             with col2:
-                fig_inr = fdschart("DXY")
-                st.plotly_chart(fig_inr)
+                fig_dxy = fdschart("DXY")
+                st.plotly_chart(fig_dxy)
 
             col1, col2 = st.columns(2)
             with col1:
-                fig_jpy = fdschart("INRKRW")
-                st.plotly_chart(fig_jpy)
+                fig_inr = fdschart("INRKRW")
+                st.plotly_chart(fig_inr)
             with col1:
                 fig_gbp = fdschart("GBPUSD")
                 st.plotly_chart(fig_gbp)
