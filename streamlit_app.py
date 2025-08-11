@@ -256,7 +256,7 @@ if authentication_status:
     st.sidebar.write("")
     st.sidebar.image(image_path, use_column_width=True, output_format='PNG')
     st.sidebar.write("")
-    st.sidebar.write("Last Update: 2025-07-04")
+    st.sidebar.write("Last Update: 2025-08-08")
     st.sidebar.markdown("<h1 style='font-size: 35px; font-weight: bold;'>QIS Square</h1>", unsafe_allow_html=True)
 
     # main_menu_options = ["Market", "국면", "유사국면", "모델전망 & Signal", "Allocation", "시나리오"]
@@ -3553,13 +3553,16 @@ if authentication_status:
                 fig_krw = fdschart("USDKRW")
                 st.plotly_chart(fig_krw)
             with col2:
-                fig_inr = fdschart("INRKRW")
+                fig_inr = fdschart("DXY")
                 st.plotly_chart(fig_inr)
 
             col1, col2 = st.columns(2)
             with col1:
-                fig_jpy = fdschart("USDJPY")
+                fig_jpy = fdschart("INRKRW")
                 st.plotly_chart(fig_jpy)
+            with col1:
+                fig_gbp = fdschart("GBPUSD")
+                st.plotly_chart(fig_gbp)
 
     authenticator.logout('Logout', 'sidebar')
 
