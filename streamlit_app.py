@@ -3507,7 +3507,7 @@ if authentication_status:
 
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                selyr = st.number_input('StartFrom', value=2015)
+                selyr = st.number_input('StartFrom', value=2020)
 
             def fdschart(xnm, selyr=selyr):
                 st.subheader(xnm)
@@ -3560,7 +3560,7 @@ if authentication_status:
             with col1:
                 fig_inr = fdschart("INRKRW")
                 st.plotly_chart(fig_inr)
-            with col1:
+            with col2:
                 fig_gbp = fdschart("GBPUSD")
                 st.plotly_chart(fig_gbp)
 
