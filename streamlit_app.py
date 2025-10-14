@@ -3426,76 +3426,76 @@ if authentication_status:
             with col4:
                 st.plotly_chart(fig3)
 
-            st.write("")
-            st.subheader("V. USIG Sector")
-            st.write("")
-
-            df = pd.read_excel(allo_path, sheet_name='USIGSector')
-            dates = df['DATE'].unique()[::-1]
-
-            sel_latest = df[df['DATE'] == dates[0]]
-            sel_latest['DATE'] = pd.to_datetime(sel_latest['DATE'])
-            date_maxsel = sel_latest['DATE'].iloc[0]
-            formatted_date = date_maxsel.strftime('%Y.%m')
-
-            labelsl = [sel_latest.iloc[0]['Label01'], sel_latest.iloc[0]['Label02'], sel_latest.iloc[0]['Label03'],
-                       sel_latest.iloc[0]['Label04'], sel_latest.iloc[0]['Label05'], sel_latest.iloc[0]['Label06'],
-                       sel_latest.iloc[0]['Label07']]
-            probl = [sel_latest.iloc[0]['Fret01'], sel_latest.iloc[0]['Fret02'], sel_latest.iloc[0]['Fret03'],
-                     sel_latest.iloc[0]['Fret04'], sel_latest.iloc[0]['Fret05'], sel_latest.iloc[0]['Fret06'],
-                     sel_latest.iloc[0]['Fret07']]
-            labels_df = pd.DataFrame({
-                'Rank': labelsl, 'Prob(>BM)': probl
-            })
-            labels_df = labels_df.style.format({
-                'Prob(>BM)': lambda x: f"{x * 100:.1f}%"
-            })
-
-            dates = dates[1:4]
-
-
-            def getbardt(df, dtrow):
-                sel_df = df[df['DATE'] == dates[dtrow]]
-                labels = [sel_df.iloc[0]['Label01'], sel_df.iloc[0]['Label02'], sel_df.iloc[0]['Label03'],
-                          sel_df.iloc[0]['Label04'], sel_df.iloc[0]['Label05'], sel_df.iloc[0]['Label06'],
-                          sel_df.iloc[0]['Label07'], sel_df.iloc[0]['Label00']]
-                values = [sel_df.iloc[0]['Fret01'], sel_df.iloc[0]['Fret02'], sel_df.iloc[0]['Fret03'],
-                          sel_df.iloc[0]['Fret04'], sel_df.iloc[0]['Fret05'], sel_df.iloc[0]['Fret06'],
-                          sel_df.iloc[0]['Fret07'], sel_df.iloc[0]['Fret00']]
-                fig = go.Figure(data=[
-                    go.Bar(
-                        x=labels,
-                        y=values,
-                        marker_color=['rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
-                                      'rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
-                                      'rgb(245, 130, 32)', 'rgb(13, 45, 79)']
-                    )
-                ])
-                fig.update_layout(
-                    title=f"{dates[dtrow]}",
-                    xaxis_title="추천순위",
-                    yaxis_title="실제성과",
-                )
-                fig.update_yaxes(range=[min(values) - (0.1 * min(values)), max(values) + (0.1 * max(values))])
-                return fig
-
-
-            fig1 = getbardt(df, 0)
-            fig2 = getbardt(df, 1)
-            fig3 = getbardt(df, 2)
-
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.write("")
-                st.subheader(f"{formatted_date}월의 순위 예측")
-                st.write("")
-                st.dataframe(labels_df, use_container_width=True, hide_index=True)
-            with col2:
-                st.plotly_chart(fig1)
-            with col3:
-                st.plotly_chart(fig2)
-            with col4:
-                st.plotly_chart(fig3)
+            # st.write("")
+            # st.subheader("V. USIG Sector")
+            # st.write("")
+            #
+            # df = pd.read_excel(allo_path, sheet_name='USIGSector')
+            # dates = df['DATE'].unique()[::-1]
+            #
+            # sel_latest = df[df['DATE'] == dates[0]]
+            # sel_latest['DATE'] = pd.to_datetime(sel_latest['DATE'])
+            # date_maxsel = sel_latest['DATE'].iloc[0]
+            # formatted_date = date_maxsel.strftime('%Y.%m')
+            #
+            # labelsl = [sel_latest.iloc[0]['Label01'], sel_latest.iloc[0]['Label02'], sel_latest.iloc[0]['Label03'],
+            #            sel_latest.iloc[0]['Label04'], sel_latest.iloc[0]['Label05'], sel_latest.iloc[0]['Label06'],
+            #            sel_latest.iloc[0]['Label07']]
+            # probl = [sel_latest.iloc[0]['Fret01'], sel_latest.iloc[0]['Fret02'], sel_latest.iloc[0]['Fret03'],
+            #          sel_latest.iloc[0]['Fret04'], sel_latest.iloc[0]['Fret05'], sel_latest.iloc[0]['Fret06'],
+            #          sel_latest.iloc[0]['Fret07']]
+            # labels_df = pd.DataFrame({
+            #     'Rank': labelsl, 'Prob(>BM)': probl
+            # })
+            # labels_df = labels_df.style.format({
+            #     'Prob(>BM)': lambda x: f"{x * 100:.1f}%"
+            # })
+            #
+            # dates = dates[1:4]
+            #
+            #
+            # def getbardt(df, dtrow):
+            #     sel_df = df[df['DATE'] == dates[dtrow]]
+            #     labels = [sel_df.iloc[0]['Label01'], sel_df.iloc[0]['Label02'], sel_df.iloc[0]['Label03'],
+            #               sel_df.iloc[0]['Label04'], sel_df.iloc[0]['Label05'], sel_df.iloc[0]['Label06'],
+            #               sel_df.iloc[0]['Label07'], sel_df.iloc[0]['Label00']]
+            #     values = [sel_df.iloc[0]['Fret01'], sel_df.iloc[0]['Fret02'], sel_df.iloc[0]['Fret03'],
+            #               sel_df.iloc[0]['Fret04'], sel_df.iloc[0]['Fret05'], sel_df.iloc[0]['Fret06'],
+            #               sel_df.iloc[0]['Fret07'], sel_df.iloc[0]['Fret00']]
+            #     fig = go.Figure(data=[
+            #         go.Bar(
+            #             x=labels,
+            #             y=values,
+            #             marker_color=['rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
+            #                           'rgb(245, 130, 32)', 'rgb(245, 130, 32)', 'rgb(245, 130, 32)',
+            #                           'rgb(245, 130, 32)', 'rgb(13, 45, 79)']
+            #         )
+            #     ])
+            #     fig.update_layout(
+            #         title=f"{dates[dtrow]}",
+            #         xaxis_title="추천순위",
+            #         yaxis_title="실제성과",
+            #     )
+            #     fig.update_yaxes(range=[min(values) - (0.1 * min(values)), max(values) + (0.1 * max(values))])
+            #     return fig
+            #
+            #
+            # fig1 = getbardt(df, 0)
+            # fig2 = getbardt(df, 1)
+            # fig3 = getbardt(df, 2)
+            #
+            # col1, col2, col3, col4 = st.columns(4)
+            # with col1:
+            #     st.write("")
+            #     st.subheader(f"{formatted_date}월의 순위 예측")
+            #     st.write("")
+            #     st.dataframe(labels_df, use_container_width=True, hide_index=True)
+            # with col2:
+            #     st.plotly_chart(fig1)
+            # with col3:
+            #     st.plotly_chart(fig2)
+            # with col4:
+            #     st.plotly_chart(fig3)
 
         elif selected_sub_menu == "FDS":
             st.title("FDS Signal monitoring")
