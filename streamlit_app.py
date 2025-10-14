@@ -2663,7 +2663,7 @@ if authentication_status:
                 html = last_row_style + html
                 st.markdown(html, unsafe_allow_html=True)
 
-            st.subheader("Duration Model4(Tree-II) - Monthly")
+            st.subheader("Duration Model4(Tree+Transformer) - Monthly")
             col1, col2 = st.columns([2, 1])
             with col1:
                 chart_sig = dfm.tail(36)
@@ -2685,7 +2685,7 @@ if authentication_status:
                 fig3.update_yaxes(range=[-1, 1], secondary_y=False, autorange='reversed', dtick=1)
                 fig3.update_yaxes(range=[-1, 1], secondary_y=True)
                 fig3.update_layout(
-                    title_text=f"Duration Model4(Tree-II) - Monthly(Hit:{hit_m1})",
+                    title_text=f"Duration Model4(Tree+Transformer) - Monthly(Hit:{hit_m1})",
                     xaxis_title="Date",
                     yaxis_title="Dur_Tree",
                     yaxis2_title="Chg_Dur",
