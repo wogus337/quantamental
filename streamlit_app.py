@@ -3134,16 +3134,16 @@ if authentication_status:
                 st.plotly_chart(fig_USDKRW1)
                 st.plotly_chart(fig_KRWUSD1)
                 st.write("")
-                st.write("")
-                st.plotly_chart(fig_USDEUR1)
-                st.plotly_chart(fig_USDCNY1)
+                #st.write("")
+                #st.plotly_chart(fig_USDEUR1)
+                #st.plotly_chart(fig_USDCNY1)
             with col2:
                 st.plotly_chart(fig_USDKRW2)
                 st.plotly_chart(fig_KRWUSD2)
                 st.write("")
-                st.write("")
-                st.plotly_chart(fig_USDGBP1)
-                st.plotly_chart(fig_USDJPY1)
+                #st.write("")
+                #st.plotly_chart(fig_USDGBP1)
+                #st.plotly_chart(fig_USDJPY1)
 
         elif selected_sub_menu == "RankingModel":
             st.title("Ranking Model Output")
