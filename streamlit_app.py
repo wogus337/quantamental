@@ -264,8 +264,9 @@ if authentication_status:
     selected_main_menu = st.sidebar.selectbox("Select a Main Menu", main_menu_options)
 
     if selected_main_menu == "Main":
-        sub_menu_options = ["Main", "PPT_QIS", "PPT_FMVC"]
+        #sub_menu_options = ["Main", "PPT_QIS", "PPT_FMVC"]
         #sub_menu_options = ["Main", "PPT_QIS"]
+        sub_menu_options = ["Main"]
 
     if selected_main_menu == "기타":
         sub_menu_options = ["DART 공시정보 검색", "Naver뉴스 검색"]
@@ -1519,7 +1520,7 @@ if authentication_status:
                 st.stop()
             columns = [col for col in tseries.columns if col != 'DATE']
 
-            df_cyclee = pd.read_excel(cylfile_path, sheet_name='CycleE')
+            df_cyclee = pd.read_excel(cylfile_path, sheet_name='CycleE', usecols='A:P')
             df_cycleemeta = pd.read_excel(cylfile_path, sheet_name='CycleE_Meta')
             phase_nm = ['Expansion', 'Downturn', 'Repair', 'Recovery']
 
@@ -1633,7 +1634,7 @@ if authentication_status:
                 st.stop()
             columns = [col for col in tseries.columns if col != 'DATE']
 
-            df_cyclee = pd.read_excel(cylfile_path, sheet_name='CycleC')
+            df_cyclee = pd.read_excel(cylfile_path, sheet_name='CycleC', usecols='A:N')
             df_cycleemeta = pd.read_excel(cylfile_path, sheet_name='CycleC_Meta')
             phase_nm = ['Expansion', 'Downturn', 'Repair', 'Recovery']
 
